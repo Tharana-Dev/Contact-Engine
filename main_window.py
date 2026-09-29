@@ -90,8 +90,8 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage("Contact Added",3000)
         try:
             self.book.save(self.data_path)
-        except OSError:
-            QMessageBox.about(self, "Warning", "Error Saving The Contact")
+        except OSError as e:
+            QMessageBox.warning(self, "Save failed", f"Couldn't save after adding:\n{e}")
 
     def _delete_contact(self, rows):
         for row in sorted(rows, reverse=True):
@@ -101,5 +101,5 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage("Contact(s) Deleted",3000)
         try:
             self.book.save(self.data_path)
-        except OSError:
-            QMessageBox.about(self, "Warning", "Error Deleting The Contact")
+        except OSError as e:
+            QMessageBox.warning(self, "Save failed", f"Couldn't save after delete:\n{e}")
