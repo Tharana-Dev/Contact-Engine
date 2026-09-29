@@ -2,7 +2,7 @@ from model import ContactBook
 from input_panel import InputPanel
 from list_panel import ContactListPanel
 
-from PySide6.QtWidgets import QMainWindow, QDockWidget, QMessageBox
+from PySide6.QtWidgets import QMainWindow, QDockWidget, QMessageBox, QLabel
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction, QKeySequence
 
@@ -14,10 +14,13 @@ class MainWindow(QMainWindow):
         self.data_panel = InputPanel()
         self.contact_list = ContactListPanel()
 
+        self.contacts_num = QLabel(f"Contacts: {len(self.book.contacts)}")
+
         self._actions()
         self._init_ui()
         self._build_dock()
         self._build_menu_bar()
+        self._build_status_bar()
         self.contact_list.refresh(self.book.contacts)
 
         self._wire_signals()
@@ -36,11 +39,15 @@ class MainWindow(QMainWindow):
     def _add_contact(self, first, last, phone, email):
         self.book.add(first, last, phone, email)
         self.contact_list.refresh(self.book.contacts)
+        self.contacts_num.setText(f"Contacts: {len(self.book.contacts)}")
+        self.statusBar().showMessage("Contact Added",3000)
 
     def _delete_contact(self, rows):
         for row in sorted(rows, reverse=True):
             self.book.remove(row)
         self.contact_list.refresh(self.book.contacts)
+        self.contacts_num.setText(f"Contacts: {len(self.book.contacts)}")
+        self.statusBar().showMessage("Contact(s) Deleted",3000)
 
     def _wire_signals(self):
         self.data_panel.contact_added.connect(self._add_contact)
@@ -74,6 +81,10 @@ class MainWindow(QMainWindow):
 
         help_menu = menu_bar.addMenu("Help")
         help_menu.addAction(self.act_about)
+
+    def _build_status_bar(self):
+        status_bar = self.statusBar()
+        status_bar.addPermanentWidget(self.contacts_num)
 
     def _show_about(self):
         QMessageBox.about(self, "About", "My Phone Book\n  Version 0.2")
