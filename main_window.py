@@ -28,42 +28,6 @@ class MainWindow(QMainWindow):
 
         self._wire_signals()
 
-    def _init_ui(self):
-        self.setWindowTitle("My Phone Book")
-        self.setMinimumHeight(800)
-        self.setMinimumWidth(900)
-        self.setCentralWidget(self.contact_list)
-
-    def _build_dock(self):
-        self.form_dock = QDockWidget("Add Contact", self)
-        self.form_dock.setWidget(self.data_panel)
-        self.addDockWidget(Qt.DockWidgetArea.TopDockWidgetArea, self.form_dock)
-
-    def _add_contact(self, first, last, phone, email):
-        self.book.add(first, last, phone, email)
-        self.contact_list.refresh(self.book.contacts)
-        self.contacts_num.setText(f"Contacts: {len(self.book.contacts)}")
-        self.statusBar().showMessage("Contact Added",3000)
-        try:
-            self.book.save(self.data_path)
-        except OSError:
-            QMessageBox.about(self, "Warning", "Error Saving The Contact")
-
-    def _delete_contact(self, rows):
-        for row in sorted(rows, reverse=True):
-            self.book.remove(row)
-        self.contact_list.refresh(self.book.contacts)
-        self.contacts_num.setText(f"Contacts: {len(self.book.contacts)}")
-        self.statusBar().showMessage("Contact(s) Deleted",3000)
-        try:
-            self.book.save(self.data_path)
-        except OSError:
-            QMessageBox.about(self, "Warning", "Error Deleting The Contact")
-
-    def _wire_signals(self):
-        self.data_panel.contact_added.connect(self._add_contact)
-        self.contact_list.delete_requested.connect(self._delete_contact)
-
     def _actions(self):
         self.new_action = QAction("Add New Contact", self)
         self.new_action.setShortcut(QKeySequence("Ctrl+N"))
@@ -81,6 +45,21 @@ class MainWindow(QMainWindow):
         self.act_about = QAction("About", self)
         self.act_about.triggered.connect(self._show_about)
         self.act_about.setStatusTip("See app details")
+
+    def _init_ui(self):
+        self.setWindowTitle("My Phone Book")
+        self.setMinimumHeight(800)
+        self.setMinimumWidth(900)
+        self.setCentralWidget(self.contact_list)
+
+    def _build_dock(self):
+        self.form_dock = QDockWidget("Add Contact", self)
+        self.form_dock.setWidget(self.data_panel)
+        self.addDockWidget(Qt.DockWidgetArea.TopDockWidgetArea, self.form_dock)
+
+    def _wire_signals(self):
+        self.data_panel.contact_added.connect(self._add_contact)
+        self.contact_list.delete_requested.connect(self._delete_contact)
 
     def _build_menu_bar(self):
         menu_bar = self.menuBar()
@@ -103,3 +82,24 @@ class MainWindow(QMainWindow):
     def _on_create_new_triggered(self):
         self.form_dock.show()
         self.data_panel.first_name.setFocus()
+
+    def _add_contact(self, first, last, phone, email):
+        self.book.add(first, last, phone, email)
+        self.contact_list.refresh(self.book.contacts)
+        self.contacts_num.setText(f"Contacts: {len(self.book.contacts)}")
+        self.statusBar().showMessage("Contact Added",3000)
+        try:
+            self.book.save(self.data_path)
+        except OSError:
+            QMessageBox.about(self, "Warning", "Error Saving The Contact")
+
+    def _delete_contact(self, rows):
+        for row in sorted(rows, reverse=True):
+            self.book.remove(row)
+        self.contact_list.refresh(self.book.contacts)
+        self.contacts_num.setText(f"Contacts: {len(self.book.contacts)}")
+        self.statusBar().showMessage("Contact(s) Deleted",3000)
+        try:
+            self.book.save(self.data_path)
+        except OSError:
+            QMessageBox.about(self, "Warning", "Error Deleting The Contact")
