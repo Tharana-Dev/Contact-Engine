@@ -1,16 +1,11 @@
+```markdown
 # My Phone Book
-
-
-A small desktop contact manager built with PySide6.
-
-![Add Contact tab](screenshots/add-tab.png)
-![View Contacts tab](screenshots/list-tab.png)
-
-...
 
 A small desktop contact manager built with **PySide6 (Qt for Python)**.
 Add contacts through a form, view them in a list, delete them — and everything
 persists to disk as JSON between sessions.
+
+![Main window](screenshots/main.png)
 
 ---
 
@@ -19,9 +14,11 @@ persists to disk as JSON between sessions.
 - Add contacts (first name, last name, phone, email)
 - View all contacts in a scrollable list
 - Multi-select and delete contacts
-- Automatic save on close, automatic load on start
+- Instant save on every change (add, delete) plus on close
 - Graceful handling of missing or corrupted data files
-- Two-tab interface: **Add Data** / **View Contacts**
+- Dockable input form — move it, float it, or close it
+- Menu bar with keyboard shortcuts (`Ctrl+N`, `Ctrl+Q`)
+- Status bar with live contact counter and action feedback
 
 ---
 
@@ -53,7 +50,7 @@ On first run, `contacts.json` is created automatically in the working directory.
 ```
 .
 ├── main.py            # entry point: builds app, loads/saves data, shows window
-├── main_window.py     # QMainWindow: owns the book + panels, wires signals
+├── main_window.py     # QMainWindow: owns the book, panels, menus, docks, status
 ├── input_panel.py     # form for entering a new contact
 ├── list_panel.py      # scrollable list of contacts with delete
 ├── model.py           # Contact dataclass + ContactBook (data + JSON I/O)
@@ -105,21 +102,38 @@ handed and forgets it.
 
 ### `main_window.py` — the controller
 
-Owns the `ContactBook` and both panels. Its only job is to wire them:
+Owns the `ContactBook`, both panels, the menu bar, the status bar, and the
+dock that wraps the input form. Its job is to wire everything together:
 
-- When `InputPanel.contact_added` fires → add to book → refresh list.
-- When `ContactListPanel.delete_requested` fires → remove from book → refresh list.
+- When `InputPanel.contact_added` fires → add to book → refresh list → update counter → save.
+- When `ContactListPanel.delete_requested` fires → remove from book → refresh list → update counter → save.
 
-Both handlers follow the same three-step pattern:
+Both handlers follow the same pattern:
 
 ```
-mutate the book  →  refresh the list  →  (done)
+mutate the book  →  refresh the list  →  update status bar  →  save to disk
 ```
 
 ### `main.py` — the process
 
-Loads the book from `contacts.json` at startup, hands it to `MainWindow`,
-saves on quit. Knows nothing about widgets.
+Loads the book from `contacts.json` at startup, hands it to `MainWindow`
+along with the data path, and keeps a save-on-quit safety net. Knows nothing
+about widgets.
+
+---
+
+## Layout
+
+The window uses `QMainWindow` slots:
+
+- **Central widget** — the contact list (always visible)
+- **Top dock** — the input form (`QDockWidget` wrapping `InputPanel`)
+- **Menu bar** — File (New Contact, Exit) / Help (About)
+- **Status bar** — permanent contact counter on the right, transient
+  feedback messages on the left
+
+The input dock is user-rearrangeable — drag it to any edge or float it as a
+separate window. This is standard `QDockWidget` behavior, provided by Qt.
 
 ---
 
@@ -131,13 +145,14 @@ User clicks Add
   → MainWindow._add_contact receives it
   → ContactBook.add(...)
   → ContactListPanel.refresh(book.contacts)
-  → user sees the new row (tab auto-switches to View Contacts)
+  → counter label updates, status message shows, book saved to disk
 
 User selects rows and clicks Delete
   → ContactListPanel emits delete_requested([rows])
   → MainWindow._delete_contact iterates rows in DESCENDING order
   → ContactBook.remove(row) for each
   → ContactListPanel.refresh(book.contacts)
+  → counter label updates, status message shows, book saved to disk
 ```
 
 **Why descending order?** Deleting index 1 first shifts index 3 down to 2.
@@ -150,7 +165,9 @@ Iterating in reverse prevents deleting the wrong contact.
 - **On startup:** `main.py` calls `book.load("contacts.json")`.
   - Missing file → treated as first run, file is created empty.
   - Corrupted file → warning dialog, app starts with an empty book.
-- **On quit:** `app.aboutToQuit` triggers `book.save("contacts.json")`.
+- **After every mutation:** `MainWindow` saves the book immediately after
+  add and delete, so a crash can't lose the last change.
+- **On quit:** `app.aboutToQuit` saves again as a safety net.
 
 The JSON format is a plain array of contact objects:
 
@@ -167,6 +184,15 @@ The JSON format is a plain array of contact objects:
 
 ---
 
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|---|---|
+| `Ctrl+N` | Show the input dock and focus the first field |
+| `Ctrl+Q` | Quit |
+
+---
+
 ## Extending
 
 The architecture is designed so features can be **added**, not **restructured**:
@@ -174,7 +200,7 @@ The architecture is designed so features can be **added**, not **restructured**:
 - **Click a row to edit** — store the full `Contact` on each list item via
   `UserRole`, emit an `edit_requested(Contact)` signal, populate the form.
 - **Confirm before delete** — wrap the delete handler in a `QMessageBox.question`.
-- **Search / filter** — add a `QLineEdit` above the list, filter before
+- **Search / filter** — add a `QLineEdit` in a right-side dock, filter before
   calling `refresh`.
 - **Sort by name** — sort `book.contacts` before refreshing.
 
@@ -182,9 +208,19 @@ None of these require changing the model/view/controller boundaries.
 
 ---
 
+## Versions
+
+| Tag | Highlights |
+|---|---|
+| `v0.1` | Initial release — tabs layout, save on close |
+| `v0.2` | Dock-based layout, menu bar, status bar, save on mutation |
+
+---
+
 ## Known Limitations
 
-- Fixed window size (500×400)
-- Save happens only on clean exit (crash = lost changes since last save)
-- No search, sort, or edit
+- No search, sort, or edit yet (planned for later versions)
 - Single file for all contacts (no multi-address-book support)
+- Window layout is not remembered between sessions (dock position resets to top)
+- Save failures show a warning dialog but the change stays in memory only
+```
