@@ -6,13 +6,16 @@ from PySide6.QtWidgets import QMainWindow, QDockWidget, QMessageBox, QLabel
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction, QKeySequence
 
+from pathlib import Path
+
 
 class MainWindow(QMainWindow):
-    def __init__(self, book: ContactBook):
+    def __init__(self, book: ContactBook, data_path:Path):
         super().__init__()
         self.book = book
         self.data_panel = InputPanel()
         self.contact_list = ContactListPanel()
+        self.data_path = data_path
 
         self.contacts_num = QLabel(f"Contacts: {len(self.book.contacts)}")
 
@@ -41,6 +44,10 @@ class MainWindow(QMainWindow):
         self.contact_list.refresh(self.book.contacts)
         self.contacts_num.setText(f"Contacts: {len(self.book.contacts)}")
         self.statusBar().showMessage("Contact Added",3000)
+        try:
+            self.book.save(self.data_path)
+        except OSError:
+            QMessageBox.about(self, "Warning", "Error Saving The Contact")
 
     def _delete_contact(self, rows):
         for row in sorted(rows, reverse=True):
@@ -48,6 +55,10 @@ class MainWindow(QMainWindow):
         self.contact_list.refresh(self.book.contacts)
         self.contacts_num.setText(f"Contacts: {len(self.book.contacts)}")
         self.statusBar().showMessage("Contact(s) Deleted",3000)
+        try:
+            self.book.save(self.data_path)
+        except OSError:
+            QMessageBox.about(self, "Warning", "Error Deleting The Contact")
 
     def _wire_signals(self):
         self.data_panel.contact_added.connect(self._add_contact)

@@ -27,7 +27,7 @@ def main():
     except (ValueError, json.JSONDecodeError) as e:
         QMessageBox.warning(None, "Load failed", f"Couldn't load contacts:\n{e}")
 
-    window = MainWindow(book)
+    window = MainWindow(book, DATA_PATH)
     window.show()
     app.aboutToQuit.connect(lambda: _save(book))
     sys.exit(app.exec())
