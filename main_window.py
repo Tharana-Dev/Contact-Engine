@@ -69,6 +69,9 @@ class MainWindow(QMainWindow):
         file_menu.addSeparator()
         file_menu.addAction(self.close_action)
 
+        view_menu = menu_bar.addMenu("View")
+        view_menu.addAction(self.form_dock.toggleViewAction())
+
         help_menu = menu_bar.addMenu("Help")
         help_menu.addAction(self.act_about)
 
