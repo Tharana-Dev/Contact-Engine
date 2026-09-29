@@ -1,4 +1,3 @@
-```markdown
 # My Phone Book
 
 A small desktop contact manager built with **PySide6 (Qt for Python)**.
@@ -223,4 +222,4 @@ None of these require changing the model/view/controller boundaries.
 - Single file for all contacts (no multi-address-book support)
 - Window layout is not remembered between sessions (dock position resets to top)
 - Save failures show a warning dialog but the change stays in memory only
-```
+
