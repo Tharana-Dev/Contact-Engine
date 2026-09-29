@@ -21,7 +21,8 @@ class MainWindow(QMainWindow):
         
     def init_ui(self):
         self.setWindowTitle("My Phone Book")
-        self.setFixedSize(500, 400)
+        self.setMinimumHeight(800)
+        self.setMinimumWidth(900)
         self.setCentralWidget(self.contact_list)
 
     def build_dock(self):
