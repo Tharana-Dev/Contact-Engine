@@ -15,7 +15,7 @@ persists to disk as JSON between sessions.
 - Multi-select and delete contacts
 - Instant save on every change (add, delete) plus on close
 - Graceful handling of missing or corrupted data files
-- Dockable input form — move it, float it, or close it
+- Dockable input form — move it, float it, close it, or toggle from the View menu
 - Menu bar with keyboard shortcuts (`Ctrl+N`, `Ctrl+Q`)
 - Status bar with live contact counter and action feedback
 
@@ -127,7 +127,7 @@ The window uses `QMainWindow` slots:
 
 - **Central widget** — the contact list (always visible)
 - **Top dock** — the input form (`QDockWidget` wrapping `InputPanel`)
-- **Menu bar** — File (New Contact, Exit) / Help (About)
+- **Menu bar** — File (New Contact, Exit) / View (toggle input form) / Help (About)
 - **Status bar** — permanent contact counter on the right, transient
   feedback messages on the left
 
