@@ -23,7 +23,7 @@ def main():
     try:
         book.load(DATA_PATH)
     except FileNotFoundError:
-        book.save(DATA_PATH)                                        # first run
+        book.save(DATA_PATH)                                     
     except (ValueError, json.JSONDecodeError) as e:
         QMessageBox.warning(None, "Load failed", f"Couldn't load contacts:\n{e}")
 
