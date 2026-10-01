@@ -9,86 +9,55 @@ class InputPanel(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        
+        # Main Layout Setup
+        self.outer_layout = QVBoxLayout()
+        self.setLayout(self.outer_layout)
+        
+        # Build UI Components
+        self._setup_header()
+        self._setup_form_fields()
+        self._setup_buttons()
+        self._apply_styles()
 
-# -----Main Layout - vertical box(for inputs and buttons) -----------
-        outer_layout = QVBoxLayout()
-        self.setLayout(outer_layout)
-
+    def _setup_header(self):
         topic = QLabel("Data Handling center")
         topic.setObjectName("topic")
         topic.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        outer_layout.addWidget(topic)
+        self.outer_layout.addWidget(topic)
 
-# ------Input field Layout: horizontal [fiel name]: [input field] layout stacked vertically
-        input_layout = QVBoxLayout()
-        outer_layout.addLayout(input_layout)
+    def _setup_form_fields(self):
+        self.input_layout = QVBoxLayout()
+        self.outer_layout.addLayout(self.input_layout)
+        
+        # Create fields using the extracted helper method
+        self.first_name = self._create_input_row("First Name: ", "Enter Your First Name Here")
+        self.last_name = self._create_input_row("Last Name: ", "Enter Your Last Name Here")
+        self.email = self._create_input_row("Email: ", "Enter Your Email Here")
+        self.phone = self._create_input_row("Phone: ", "Enter Your Contact Number Here")
 
-# ------Row1: Fisrt name-----------
-        row1 = QHBoxLayout()
-        row1.setSpacing(12)
-        input_layout.addLayout(row1)
+    def _create_input_row(self, label_text, placeholder_text):
+        """Helper method to construct a single form row."""
+        row_layout = QHBoxLayout()
+        row_layout.setSpacing(12)
+        self.input_layout.addLayout(row_layout)
 
-        row1_name = QLabel("First Name: ")
-        row1_name.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-        row1_name.setObjectName("fieldLabel")
+        label = QLabel(label_text)
+        label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        label.setObjectName("fieldLabel")
 
-        self.first_name = QLineEdit()
-        self.first_name.setObjectName("input")
-        self.first_name.setPlaceholderText("Enter Your First Name Here")
+        line_edit = QLineEdit()
+        line_edit.setObjectName("input")
+        line_edit.setPlaceholderText(placeholder_text)
 
-        row1.addWidget(row1_name,4)
-        row1.addWidget(self.first_name,6)
+        row_layout.addWidget(label, 4)
+        row_layout.addWidget(line_edit, 6)
+        
+        return line_edit
 
-# ------Row2: Last name-----------
-        row2 = QHBoxLayout()
-        row2.setSpacing(12)
-        input_layout.addLayout(row2)
-
-        row2_name = QLabel("Last Name: ")
-        row2_name.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-        row2_name.setObjectName("fieldLabel")
-
-        self.last_name = QLineEdit()
-        self.last_name.setObjectName("input")
-        self.last_name.setPlaceholderText("Enter Your Last Name Here")
-
-        row2.addWidget(row2_name, 4)
-        row2.addWidget(self.last_name, 6)
-
-# ------Row3: Email-----------
-        row3 = QHBoxLayout()
-        row3.setSpacing(12)
-        input_layout.addLayout(row3)
-
-        row3_name = QLabel("Email: ")
-        row3_name.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-        row3_name.setObjectName("fieldLabel")
-
-        self.email = QLineEdit()
-        self.email.setObjectName("input")
-        self.email.setPlaceholderText("Enter Your Email Here")
-
-        row3.addWidget(row3_name, 4)
-        row3.addWidget(self.email,6)
-
-# ------Row4: Contact Number-----------
-        row4 = QHBoxLayout()
-        input_layout.addLayout(row4)
-
-        row4_name = QLabel("Phone: ")
-        row4_name.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-        row4_name.setObjectName("fieldLabel")
-
-        self.phone = QLineEdit()
-        self.phone.setObjectName("input")
-        self.phone.setPlaceholderText("Enter Your Contact Number Here")
-
-        row4.addWidget(row4_name, 4)
-        row4.addWidget(self.phone, 6)
-
-# ----- Buttons: Add / Reset ---------
+    def _setup_buttons(self):
         button_layout = QHBoxLayout()
-        outer_layout.addLayout(button_layout)
+        self.outer_layout.addLayout(button_layout)
 
         self.add_btn = QPushButton("Add")
         self.add_btn.setObjectName("smallBtn")
@@ -98,29 +67,30 @@ class InputPanel(QWidget):
         button_layout.addWidget(self.add_btn)
         button_layout.addWidget(self.reset_btn)
 
+        # Signal connections
         self.add_btn.clicked.connect(self._on_add_clicked)
-        
         self.reset_btn.clicked.connect(self._clear_fields)
 
+    def _apply_styles(self):
         self.setStyleSheet("""
-        QLabel#topic {
-            font-size: 24px;
-            font-weight: bold;
-        }
-        QLineEdit#input {
-            min-height: 48px;
-            font-size: 14px;
-        }
-        QLabel#fieldLabel {
-            min-height: 48px;     
-            font-size: 14px;
-        }
-        QPushButton#smallBtn {
-            min-height: 32px;
-            max-height: 32px;
-            font-size: 18px;
-        }
-    """)
+            QLabel#topic {
+                font-size: 24px;
+                font-weight: bold;
+            }
+            QLineEdit#input {
+                min-height: 48px;
+                font-size: 14px;
+            }
+            QLabel#fieldLabel {
+                min-height: 48px;     
+                font-size: 14px;
+            }
+            QPushButton#smallBtn {
+                min-height: 32px;
+                max-height: 32px;
+                font-size: 18px;
+            }
+        """)
 
     def _on_add_clicked(self):
         first = self.first_name.text().strip()
@@ -143,6 +113,6 @@ class InputPanel(QWidget):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = InputPanel()
-    window.setFixedSize(500,400)
+    window.setFixedSize(500, 400)
     window.show()
     sys.exit(app.exec())
