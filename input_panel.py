@@ -59,7 +59,7 @@ class InputPanel(QWidget):
         self.outer_layout.addLayout(button_layout)
 
         self.add_btn = QPushButton("Add")
-        self.add_btn.setObjectName("smallBtn")
+        self.add_btn.setObjectName("primaryBtn")
         self.reset_btn = QPushButton("Reset")
         self.reset_btn.setObjectName("smallBtn")
 
