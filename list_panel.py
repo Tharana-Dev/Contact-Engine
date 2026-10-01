@@ -8,25 +8,38 @@ class ContactListPanel(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        outer_layout = QVBoxLayout(self)
+        # Main Layout Setup
+        self.outer_layout = QVBoxLayout(self)
 
+        # Build UI Components
+        self._setup_header()
+        self._setup_list_widget()
+        self._setup_buttons()
+        self._apply_styles()
+
+    def _setup_header(self):
         topic = QLabel("Contacts")
         topic.setObjectName("topic")
         topic.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        outer_layout.addWidget(topic)
+        self.outer_layout.addWidget(topic)
 
+    def _setup_list_widget(self):
         self.list_widget = QListWidget()
-        self.delete_btn = QPushButton("Delete")
-
         self.list_widget.setSpacing(5)
+        self.list_widget.setSelectionMode(QListWidget.SelectionMode.ExtendedSelection)
         self.list_widget.setItemAlignment(
-            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+        )
+        self.outer_layout.addWidget(self.list_widget)
 
-        outer_layout.addWidget(self.list_widget)
-        outer_layout.addWidget(self.delete_btn)
-
+    def _setup_buttons(self):
+        self.delete_btn = QPushButton("Delete")
+        self.outer_layout.addWidget(self.delete_btn)
+        
+        # Signal connection
         self.delete_btn.clicked.connect(self._on_delete_clicked)
 
+    def _apply_styles(self):
         self.setStyleSheet("""
             QListWidget {
                 font-size: 24px;
@@ -45,23 +58,25 @@ class ContactListPanel(QWidget):
                 font-size: 24px;
             }
             QLabel {
-            font-size: 32px;
-            font-weight: bold;
-            padding: 6px 12px;
-        }
+                font-size: 32px;
+                font-weight: bold;
+                padding: 6px 12px;
+            }
         """)
 
-    def refresh(self, contacts: list) -> None:  # contacts not imported for the MVP model
+    def refresh(self, contacts: list) -> None:
         self.list_widget.clear()
 
         if not contacts:
             self.list_widget.addItem("No Contacts Yet")
-            self.list_widget.setItemAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-            self.list_widget.setSelectionMode(self.list_widget.SelectionMode.NoSelection)
+            self.list_widget.setSelectionMode(QListWidget.SelectionMode.NoSelection)
         else:
-            self.list_widget.setSelectionMode(self.list_widget.SelectionMode.ExtendedSelection)
+            # Re-enable multi-selection if it was previously disabled by empty state
+            self.list_widget.setSelectionMode(QListWidget.SelectionMode.ExtendedSelection)
             for c in contacts:
-                self.list_widget.addItem(f"{c.first_name} {c.last_name} \n  {c.phone} - {c.email}")
+                self.list_widget.addItem(
+                    f"{c.first_name} {c.last_name} \n  {c.phone} - {c.email}"
+                )
 
     def _on_delete_clicked(self):
         items = self.list_widget.selectedItems()
@@ -72,6 +87,7 @@ class ContactListPanel(QWidget):
         rows = [self.list_widget.row(item) for item in items]
         self.delete_requested.emit(rows)
 
+
 if __name__ == "__main__":
     import sys
     from PySide6.QtWidgets import QApplication
@@ -81,10 +97,6 @@ if __name__ == "__main__":
     panel = ContactListPanel()
     panel.setFixedSize(500, 400)
     panel.refresh([
-        Contact("Ada", "Lovelace", "0123456789", "a@b.com"),
-        Contact("Ada", "Lovelace", "0123456789", "a@b.com"),
-        Contact("Ada", "Lovelace", "0123456789", "a@b.com"),
-        Contact("Ada", "Lovelace", "0123456789", "a@b.com"),
         Contact("Ada", "Lovelace", "0123456789", "a@b.com"),
         Contact("Ada", "Lovelace", "0123456789", "a@b.com"),
         Contact("Alan", "Turing", "0123456789", "t@b.com"),
