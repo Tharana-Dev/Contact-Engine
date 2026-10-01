@@ -1,4 +1,4 @@
-# My Phone Book
+# Contact-Engine
 
 A small desktop contact manager built with **PySide6 (Qt for Python)**.
 Add contacts through a form, view them in a list, delete them — and everything
@@ -213,6 +213,7 @@ None of these require changing the model/view/controller boundaries.
 |---|---|
 | `v0.1` | Initial release — tabs layout, save on close |
 | `v0.2` | Dock-based layout, menu bar, status bar, save on mutation |
+| `v0.3` | Improved Code tructure and styling
 
 ---
 
@@ -222,4 +223,3 @@ None of these require changing the model/view/controller boundaries.
 - Single file for all contacts (no multi-address-book support)
 - Window layout is not remembered between sessions (dock position resets to top)
 - Save failures show a warning dialog but the change stays in memory only
-
