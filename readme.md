@@ -213,7 +213,7 @@ None of these require changing the model/view/controller boundaries.
 |---|---|
 | `v0.1` | Initial release — tabs layout, save on close |
 | `v0.2` | Dock-based layout, menu bar, status bar, save on mutation |
-| `v0.3` | Improved Code tructure and styling
+| `v0.3` | Improved Code structure and styling
 
 ---
 
