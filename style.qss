@@ -1,7 +1,9 @@
 QLabel#topic {
     font-size: 24px;
     font-weight: bold;
+    color: #0078D4;
     }
+
 QLineEdit#input {
     min-height: 48px;
     font-size: 14px;
@@ -15,6 +17,22 @@ QPushButton#smallBtn {
     max-height: 32px;
     font-size: 18px;
     }
+QPushButton#primaryBtn {
+    min-height: 32px;
+    max-height: 32px;
+    font-size: 16px;
+    background-color: #0078D4;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 16px;
+}
+QPushButton#primaryBtn:hover {
+    background-color: #106EBE;
+}
+QPushButton#primaryBtn:pressed {
+    background-color: #005A9E;
+}
 
 QListWidget {
     font-size: 24px;
@@ -28,10 +46,21 @@ QListWidget::item:selected {
     background: palette(highlight);
     color: palette(highlighted-text);
     }
-QPushButton#deletebtn {
+QPushButton#deleteBtn {
     min-height: 36px;
-    font-size: 24px;
-    }
+    font-size: 16px;
+    background-color: #B0074D;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 16px;
+}
+QPushButton#deleteBtn:hover {
+    background-color: #8E053E;
+}
+QPushButton#deleteBtn:pressed {
+    background-color: #6D032F;
+}
 QLabel#counterLabel {
     font-size: 20px;
     padding: 6px 12px;

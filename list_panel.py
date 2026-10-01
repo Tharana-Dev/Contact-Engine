@@ -33,7 +33,8 @@ class ContactListPanel(QWidget):
 
     def _setup_buttons(self):
         self.delete_btn = QPushButton("Delete")
-        self.delete_btn.setObjectName("deletebtn")
+        self.delete_btn.setObjectName("deleteBtn")
+        self.delete_btn.setMinimumHeight(50)
         self.outer_layout.addWidget(self.delete_btn)
         
         # Signal connection
