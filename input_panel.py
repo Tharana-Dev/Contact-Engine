@@ -18,7 +18,6 @@ class InputPanel(QWidget):
         self._setup_header()
         self._setup_form_fields()
         self._setup_buttons()
-        self._apply_styles()
 
     def _setup_header(self):
         topic = QLabel("Data Handling center")
@@ -70,27 +69,6 @@ class InputPanel(QWidget):
         # Signal connections
         self.add_btn.clicked.connect(self._on_add_clicked)
         self.reset_btn.clicked.connect(self._clear_fields)
-
-    def _apply_styles(self):
-        self.setStyleSheet("""
-            QLabel#topic {
-                font-size: 24px;
-                font-weight: bold;
-            }
-            QLineEdit#input {
-                min-height: 48px;
-                font-size: 14px;
-            }
-            QLabel#fieldLabel {
-                min-height: 48px;     
-                font-size: 14px;
-            }
-            QPushButton#smallBtn {
-                min-height: 32px;
-                max-height: 32px;
-                font-size: 18px;
-            }
-        """)
 
     def _on_add_clicked(self):
         first = self.first_name.text().strip()

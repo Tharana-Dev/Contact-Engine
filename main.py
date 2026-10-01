@@ -9,7 +9,6 @@ from main_window import MainWindow
 
 DATA_PATH = Path("contacts.json")
 
-
 def _save_on_exit(book):
     try:
         book.save(DATA_PATH)
@@ -18,6 +17,7 @@ def _save_on_exit(book):
 
 def main():
     app = QApplication(sys.argv)
+    app.setStyleSheet(Path("style.qss").read_text())
 
     book = ContactBook()
     try:
