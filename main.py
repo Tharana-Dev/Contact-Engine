@@ -10,7 +10,7 @@ from main_window import MainWindow
 DATA_PATH = Path("contacts.json")
 
 
-def _save(book):
+def _save_on_exit(book):
     try:
         book.save(DATA_PATH)
     except OSError as e:
@@ -29,7 +29,7 @@ def main():
 
     window = MainWindow(book, DATA_PATH)
     window.show()
-    app.aboutToQuit.connect(lambda: _save(book))
+    app.aboutToQuit.connect(lambda: _save_on_exit(book))
     sys.exit(app.exec())
 
 
