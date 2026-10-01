@@ -48,7 +48,7 @@ class MainWindow(QMainWindow):
         self.act_about.setStatusTip("See app details")
 
     def _init_ui(self):
-        self.setWindowTitle("My Phone Book")
+        self.setWindowTitle("Contact Engine")
         self.setMinimumSize(900,800)
         self.setCentralWidget(self.contact_list)
 
