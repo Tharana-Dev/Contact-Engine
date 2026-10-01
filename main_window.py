@@ -13,13 +13,13 @@ class MainWindow(QMainWindow):
     def __init__(self, book: ContactBook, data_path:Path):
         super().__init__()
         self.book = book
-        self.data_panel = InputPanel()
+        self.input_panel = InputPanel()
         self.contact_list = ContactListPanel()
         self.data_path = data_path
 
         self.contacts_num = QLabel(f"Contacts: {len(self.book.contacts)}")
 
-        self._actions()
+        self._build_actions()
         self._init_ui()
         self._build_dock()
         self._build_menu_bar()
@@ -28,7 +28,7 @@ class MainWindow(QMainWindow):
 
         self._wire_signals()
 
-    def _actions(self):
+    def _build_actions(self):
         self.new_action = QAction("Add New Contact", self)
         self.new_action.setShortcut(QKeySequence("Ctrl+N"))
         self.new_action.triggered.connect(self._on_create_new_triggered)
@@ -40,7 +40,7 @@ class MainWindow(QMainWindow):
             QKeySequence("Ctrl+Q")
         ])
         self.close_action.triggered.connect(self.close)
-        self.close_action.setStatusTip("Close The App")
+        self.close_action.setStatusTip("Close the app")
 
         self.act_about = QAction("About", self)
         self.act_about.triggered.connect(self._show_about)
@@ -48,17 +48,16 @@ class MainWindow(QMainWindow):
 
     def _init_ui(self):
         self.setWindowTitle("My Phone Book")
-        self.setMinimumHeight(800)
-        self.setMinimumWidth(900)
+        self.setMinimumSize(900,800)
         self.setCentralWidget(self.contact_list)
 
     def _build_dock(self):
         self.form_dock = QDockWidget("Add Contact", self)
-        self.form_dock.setWidget(self.data_panel)
+        self.form_dock.setWidget(self.input_panel)
         self.addDockWidget(Qt.DockWidgetArea.TopDockWidgetArea, self.form_dock)
 
     def _wire_signals(self):
-        self.data_panel.contact_added.connect(self._add_contact)
+        self.input_panel.contact_added.connect(self._add_contact)
         self.contact_list.delete_requested.connect(self._delete_contact)
 
     def _build_menu_bar(self):
@@ -80,29 +79,26 @@ class MainWindow(QMainWindow):
         status_bar.addPermanentWidget(self.contacts_num)
 
     def _show_about(self):
-        QMessageBox.about(self, "About", "My Phone Book\n  Version 0.2")
+        QMessageBox.about(self, "About", "My Phone Book\n  Version 0.3")
     
     def _on_create_new_triggered(self):
         self.form_dock.show()
-        self.data_panel.first_name.setFocus()
+        self.input_panel.first_name.setFocus()
 
-    def _add_contact(self, first, last, phone, email):
-        self.book.add(first, last, phone, email)
+    def _after_mutation(self, status_message: str, error_context: str) -> None:
         self.contact_list.refresh(self.book.contacts)
         self.contacts_num.setText(f"Contacts: {len(self.book.contacts)}")
-        self.statusBar().showMessage("Contact Added",3000)
+        self.statusBar().showMessage(status_message, 3000)
         try:
             self.book.save(self.data_path)
         except OSError as e:
-            QMessageBox.warning(self, "Save failed", f"Couldn't save after adding:\n{e}")
+            QMessageBox.warning(self, "Save failed", f"{error_context}:\n{e}")
+
+    def _add_contact(self, first, last, phone, email):
+        self.book.add(first, last, phone, email)
+        self._after_mutation("Contact added", "Couldn't save after adding")
 
     def _delete_contact(self, rows):
         for row in sorted(rows, reverse=True):
             self.book.remove(row)
-        self.contact_list.refresh(self.book.contacts)
-        self.contacts_num.setText(f"Contacts: {len(self.book.contacts)}")
-        self.statusBar().showMessage("Contact(s) Deleted",3000)
-        try:
-            self.book.save(self.data_path)
-        except OSError as e:
-            QMessageBox.warning(self, "Save failed", f"Couldn't save after delete:\n{e}")
+        self._after_mutation("Contact(s) deleted", "Couldn't save after deleting")
