@@ -21,19 +21,18 @@ QListWidget {
     min-height: 200px;
     }
 QListWidget::item {
-    min-height: 5px;
+    min-height: 50px;
     padding: 6px 10px;
     }
 QListWidget::item:selected {
     background: palette(highlight);
     color: palette(highlighted-text);
     }
-QPushButton {
+QPushButton#deletebtn {
     min-height: 36px;
     font-size: 24px;
     }
-QLabel {
-    font-size: 32px;
-    font-weight: bold;
+QLabel#counterLabel {
+    font-size: 20px;
     padding: 6px 12px;
         }

@@ -18,6 +18,7 @@ class MainWindow(QMainWindow):
         self.data_path = data_path
 
         self.contacts_num = QLabel(f"Contacts: {len(self.book.contacts)}")
+        self.contacts_num.setObjectName("counterLabel")
 
         self._build_actions()
         self._init_ui()

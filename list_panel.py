@@ -15,7 +15,6 @@ class ContactListPanel(QWidget):
         self._setup_header()
         self._setup_list_widget()
         self._setup_buttons()
-        self._apply_styles()
 
     def _setup_header(self):
         topic = QLabel("Contacts")
@@ -34,35 +33,12 @@ class ContactListPanel(QWidget):
 
     def _setup_buttons(self):
         self.delete_btn = QPushButton("Delete")
+        self.delete_btn.setObjectName("deletebtn")
         self.outer_layout.addWidget(self.delete_btn)
         
         # Signal connection
         self.delete_btn.clicked.connect(self._on_delete_clicked)
 
-    def _apply_styles(self):
-        self.setStyleSheet("""
-            QListWidget {
-                font-size: 24px;
-                min-height: 200px;
-            }
-            QListWidget::item {
-                min-height: 50px;
-                padding: 6px 10px;
-            }
-            QListWidget::item:selected {
-                background: palette(highlight);
-                color: palette(highlighted-text);
-            }
-            QPushButton {
-                min-height: 36px;
-                font-size: 24px;
-            }
-            QLabel {
-                font-size: 32px;
-                font-weight: bold;
-                padding: 6px 12px;
-            }
-        """)
 
     def refresh(self, contacts: list) -> None:
         self.list_widget.clear()
