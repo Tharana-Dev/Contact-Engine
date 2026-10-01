@@ -29,8 +29,8 @@ class ContactBook:
         contact = Contact(
             first_name=f_name,
             last_name=l_name,
-            email=email,
-            phone=phone
+            phone=phone,
+            email=email
             )
         self.contacts.append(contact)
         return contact
