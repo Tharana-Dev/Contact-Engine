@@ -80,7 +80,7 @@ class Database:
             for row in rows
         ]
 
-    def delete_contacts(self, ids: list[int]) -> None:
+    def delete_contacts(self, ids: list[int | None]) -> None:
         """Bulk deletes in one transaction, filtered by id."""
         if not ids or not self._is_connected():
             return
