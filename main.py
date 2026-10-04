@@ -1,36 +1,17 @@
 import sys
-import json
 from pathlib import Path
 
-from PySide6.QtWidgets import QApplication, QMessageBox
-
-#can't import Contactbook it is moved to a sqlite layer will be implemented
-
+from database import Database
+from PySide6.QtWidgets import QApplication
 from main_window import MainWindow
-
-DATA_PATH = Path("contacts.json")
-
-def _save_on_exit(book):
-    try:
-        book.save(DATA_PATH)
-    except OSError as e:
-        print(f"Save failed: {e}", file=sys.stderr)
 
 def main():
     app = QApplication(sys.argv)
     app.setStyleSheet(Path("style.qss").read_text())
-
-    book = ContactBook()
-    try:
-        book.load(DATA_PATH)
-    except FileNotFoundError:
-        book.save(DATA_PATH)                                     
-    except (ValueError, json.JSONDecodeError) as e:
-        QMessageBox.warning(None, "Load failed", f"Couldn't load contacts:\n{e}")
-
-    window = MainWindow(book, DATA_PATH)
+    database = Database()
+    window = MainWindow(database)
     window.show()
-    app.aboutToQuit.connect(lambda: _save_on_exit(book))
+    app.aboutToQuit.connect(database.close)
     sys.exit(app.exec())
 
 
