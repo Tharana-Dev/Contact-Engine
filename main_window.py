@@ -6,8 +6,6 @@ from PySide6.QtWidgets import QMainWindow, QDockWidget, QMessageBox, QLabel
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction, QKeySequence
 
-from pathlib import Path
-
 
 class MainWindow(QMainWindow):
     def __init__(self, database: Database):
