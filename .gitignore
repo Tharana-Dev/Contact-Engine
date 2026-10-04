@@ -1,6 +1,9 @@
 # Data file — created at runtime, contains user data
 contacts.json
 
+#practice folder
+dump/
+
 # Python
 __pycache__/
 *.py[cod]
