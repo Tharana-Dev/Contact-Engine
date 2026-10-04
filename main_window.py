@@ -1,4 +1,4 @@
-from model import ContactBook
+#can't import Contactbook it is moved to a sqlite layer will be implemented
 from input_panel import InputPanel
 from list_panel import ContactListPanel
 

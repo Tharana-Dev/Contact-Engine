@@ -4,7 +4,8 @@ from pathlib import Path
 
 from PySide6.QtWidgets import QApplication, QMessageBox
 
-from model import ContactBook
+#can't import Contactbook it is moved to a sqlite layer will be implemented
+
 from main_window import MainWindow
 
 DATA_PATH = Path("contacts.json")
