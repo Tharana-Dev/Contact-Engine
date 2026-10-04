@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QVBoxLayout, QLabel, QMessageBox, QListWidget, QWidget, QPushButton
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QTableView, QMessageBox, QAbstractItemView, QHeaderView
 from PySide6.QtCore import Signal, Qt
 
 
@@ -13,7 +13,7 @@ class ContactListPanel(QWidget):
 
         # Build UI Components
         self._setup_header()
-        self._setup_list_widget()
+        self._setup_table()
         self._setup_buttons()
 
     def _setup_header(self):
@@ -22,62 +22,33 @@ class ContactListPanel(QWidget):
         topic.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.outer_layout.addWidget(topic)
 
-    def _setup_list_widget(self):
-        self.list_widget = QListWidget()
-        self.list_widget.setSpacing(5)
-        self.list_widget.setSelectionMode(QListWidget.SelectionMode.ExtendedSelection)
-        self.list_widget.setItemAlignment(
-            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
-        )
-        self.outer_layout.addWidget(self.list_widget)
+    def _setup_table(self):
+        self.table = QTableView()
+        self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.table.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.table.setAlternatingRowColors(True)
+        self.table.verticalHeader().setVisible(False)
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+
+        self.outer_layout.addWidget(self.table)
 
     def _setup_buttons(self):
         self.delete_btn = QPushButton("Delete")
         self.delete_btn.setObjectName("deleteBtn")
-        self.delete_btn.setMinimumHeight(50)
         self.outer_layout.addWidget(self.delete_btn)
         
         # Signal connection
         self.delete_btn.clicked.connect(self._on_delete_clicked)
 
 
-    def refresh(self, contacts: list) -> None:
-        self.list_widget.clear()
-
-        if not contacts:
-            self.list_widget.addItem("No Contacts Yet")
-            self.list_widget.setSelectionMode(QListWidget.SelectionMode.NoSelection)
-        else:
-            # Re-enable multi-selection if it was previously disabled by empty state
-            self.list_widget.setSelectionMode(QListWidget.SelectionMode.ExtendedSelection)
-            for c in contacts:
-                self.list_widget.addItem(
-                    f"{c.first_name} {c.last_name} \n  {c.phone} - {c.email}"
-                )
-
     def _on_delete_clicked(self):
-        items = self.list_widget.selectedItems()
-        if not items:
+        rows = [idx.row() for idx in self.table.selectionModel().selectedRows()]
+        if len(rows) < 0:
             QMessageBox.warning(self, "Nothing selected", "Pick a contact first.")
             return
-
-        rows = [self.list_widget.row(item) for item in items]
+        
         self.delete_requested.emit(rows)
 
-
-if __name__ == "__main__":
-    import sys
-    from PySide6.QtWidgets import QApplication
-    from model import Contact
-
-    app = QApplication(sys.argv)
-    panel = ContactListPanel()
-    panel.setFixedSize(500, 400)
-    panel.refresh([
-        Contact("Ada", "Lovelace", "0123456789", "a@b.com"),
-        Contact("Ada", "Lovelace", "0123456789", "a@b.com"),
-        Contact("Alan", "Turing", "0123456789", "t@b.com"),
-    ])
-    panel.show()
-    panel.delete_requested.connect(lambda row: print(f"delete row {row}"))
-    sys.exit(app.exec())
+    def set_model(self, model) -> None:
+        self.table.setModel(model)
