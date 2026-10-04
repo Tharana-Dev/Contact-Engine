@@ -1,7 +1,7 @@
-#can't import Contactbook it is moved to a sqlite layer will be implemented
 from input_panel import InputPanel
 from list_panel import ContactListPanel
-
+from table_model import ContactModel
+from database import Database
 from PySide6.QtWidgets import QMainWindow, QDockWidget, QMessageBox, QLabel
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction, QKeySequence
@@ -10,14 +10,14 @@ from pathlib import Path
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, book: ContactBook, data_path:Path):
+    def __init__(self, database: Database):
         super().__init__()
-        self.book = book
+        self.db = database
         self.input_panel = InputPanel()
         self.contact_list = ContactListPanel()
-        self.data_path = data_path
+        self.model = ContactModel(self.db)
 
-        self.contacts_num = QLabel(f"Contacts: {len(self.book.contacts)}")
+        self.contacts_num = QLabel(f"Contacts: {self.model.rowCount()}")
         self.contacts_num.setObjectName("counterLabel")
 
         self._build_actions()
@@ -25,7 +25,7 @@ class MainWindow(QMainWindow):
         self._build_dock()
         self._build_menu_bar()
         self._build_status_bar()
-        self.contact_list.refresh(self.book.contacts)
+        self.contact_list.set_model(self.model)
 
         self._wire_signals()
 
@@ -80,26 +80,19 @@ class MainWindow(QMainWindow):
         status_bar.addPermanentWidget(self.contacts_num)
 
     def _show_about(self):
-        QMessageBox.about(self, "About", "My Phone Book\n  Version 0.3")
+        QMessageBox.about(self, "About", "Contact Engine\n  Version 0.4")
     
     def _on_create_new_triggered(self):
         self.form_dock.show()
         self.input_panel.first_name.setFocus()
 
-    def _after_mutation(self, status_message: str, error_context: str) -> None:
-        self.contact_list.refresh(self.book.contacts)
-        self.contacts_num.setText(f"Contacts: {len(self.book.contacts)}")
-        self.statusBar().showMessage(status_message, 3000)
-        try:
-            self.book.save(self.data_path)
-        except OSError as e:
-            QMessageBox.warning(self, "Save failed", f"{error_context}:\n{e}")
-
     def _add_contact(self, first, last, phone, email):
-        self.book.add(first, last, phone, email)
-        self._after_mutation("Contact added", "Couldn't save after adding")
+        self.model.add_contact(first, last, phone, email)
+        self.contacts_num.setText(f"Contacts: {self.model.rowCount()}")
+        self.statusBar().showMessage("Contact added", 3000)
 
     def _delete_contact(self, rows):
-        for row in sorted(rows, reverse=True):
-            self.book.remove(row)
-        self._after_mutation("Contact(s) deleted", "Couldn't save after deleting")
+        self.model.remove_contacts(rows)
+        self.contacts_num.setText(f"Contacts: {self.model.rowCount()}")
+        self.statusBar().showMessage("Contact(s) Removed", 3000)
+        
