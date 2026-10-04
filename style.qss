@@ -33,19 +33,6 @@ QPushButton#primaryBtn:hover {
 QPushButton#primaryBtn:pressed {
     background-color: #005A9E;
 }
-
-QListWidget {
-    font-size: 24px;
-    min-height: 200px;
-    }
-QListWidget::item {
-    min-height: 50px;
-    padding: 6px 10px;
-    }
-QListWidget::item:selected {
-    background: palette(highlight);
-    color: palette(highlighted-text);
-    }
 QPushButton#deleteBtn {
     min-height: 36px;
     font-size: 16px;
