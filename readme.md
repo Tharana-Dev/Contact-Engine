@@ -1,8 +1,8 @@
-# Contact-Engine
+# Contact Engine
 
 A small desktop contact manager built with **PySide6 (Qt for Python)**.
-Add contacts through a form, view them in a list, delete them — and everything
-persists to disk as JSON between sessions.
+Add contacts through a form, view them in a sortable table, delete them — and
+everything persists to a local SQLite database between sessions.
 
 ![Main window](screenshots/main.png)
 
@@ -11,10 +11,11 @@ persists to disk as JSON between sessions.
 ## Features
 
 - Add contacts (first name, last name, phone, email)
-- View all contacts in a scrollable list
+- View all contacts in a sortable table (`QTableView`)
 - Multi-select and delete contacts
-- Instant save on every change (add, delete) plus on close
-- Graceful handling of missing or corrupted data files
+- Instant persistence — every insert/delete is committed to SQLite immediately
+- WAL mode for concurrent reads
+- Indexed search columns (first name, last name, email)
 - Dockable input form — move it, float it, close it, or toggle from the View menu
 - Menu bar with keyboard shortcuts (`Ctrl+N`, `Ctrl+Q`)
 - Status bar with live contact counter and action feedback
@@ -23,7 +24,7 @@ persists to disk as JSON between sessions.
 
 ## Requirements
 
-- Python 3.10+ (uses `list[Contact] | None` type hints)
+- Python 3.10+ (uses `list[Contact] | None` and `X | Y` type hints)
 - PySide6
 
 Install:
@@ -37,10 +38,13 @@ pip install PySide6
 ## Running
 
 ```bash
+git clone https://github.com/Tharana-Dev/contact-engine.git
+cd contact-engine
 python main.py
 ```
 
-On first run, `contacts.json` is created automatically in the working directory.
+On first run, `contacts.db` is created automatically in the working directory
+with the schema and indexes applied.
 
 ---
 
@@ -48,27 +52,70 @@ On first run, `contacts.json` is created automatically in the working directory.
 
 ```
 .
-├── main.py            # entry point: builds app, loads/saves data, shows window
-├── main_window.py     # QMainWindow: owns the book, panels, menus, docks, status
+├── main.py            # entry point: builds app, opens DB, shows window
+├── main_window.py     # QMainWindow: owns model, panels, menus, docks, status
 ├── input_panel.py     # form for entering a new contact
-├── list_panel.py      # scrollable list of contacts with delete
-├── model.py           # Contact dataclass + ContactBook (data + JSON I/O)
-└── contacts.json      # auto-generated data file
+├── list_panel.py      # QTableView + Delete button
+├── table_model.py     # ContactModel — QAbstractTableModel subclass
+├── database.py        # SQLite connection, schema, and all SQL
+├── contact.py         # Contact dataclass
+├── style.qss          # application-wide stylesheet
+└── contacts.db        # auto-generated SQLite database
 ```
 
 ---
 
 ## Architecture
 
-The app follows a simple **model / view / controller** split.
+The app follows a **model / view / controller** split, with a clean data layer
+underneath.
 
-### `model.py` — the data
+### `contact.py` — the domain model
 
-- **`Contact`** — a frozen dataclass holding `first_name`, `last_name`,
-  `phone`, `email`. Rejects blank fields at construction time.
-- **`ContactBook`** — holds a list of `Contact`s. Provides `add`, `remove`,
-  `save`, and `load`. This is the **single source of truth** — no other
-  part of the app stores contacts.
+A single frozen dataclass:
+
+- **`Contact`** — holds `id`, `first_name`, `last_name`, `phone`, `email`.
+  Strips whitespace and rejects blank fields at construction time.
+
+The `id` field is `int | None` — `None` before the contact is saved, and the
+DB-assigned primary key afterward.
+
+### `database.py` — the data layer
+
+- **`Database`** — owns the SQLite connection. Enables WAL mode and
+  `synchronous=NORMAL` on startup, creates the schema and indexes if missing.
+  All SQL in the project lives here.
+
+Methods:
+
+```python
+insert_contact(first, last, phone, email) -> Contact
+fetch_all() -> list[Contact]
+delete_contacts(ids: list[int]) -> None
+close() -> None
+```
+
+No Qt. No display. Just SQL and `Contact` objects.
+
+### `table_model.py` — the Qt view model
+
+- **`ContactModel(QAbstractTableModel)`** — bridges `Database` and `QTableView`.
+  Loads all contacts once at construction, then holds them in memory. Adds and
+  removes go through the database first, then update the in-memory list with
+  proper `beginInsertRows` / `endInsertRows` / `beginRemoveRows` /
+  `endRemoveRows` signals so the view redraws correctly.
+
+Public mutation methods:
+
+```python
+add_contact(first, last, phone, email) -> Contact
+remove_contacts(rows: list[int]) -> None   # rows translated to ids internally
+```
+
+**Why rows vs ids matters:** the view talks in row indices (0, 1, 2, ...) but
+the DB is keyed by id. `remove_contacts` translates — it maps each row to the
+corresponding `Contact.id`, deletes by id in a single SQL statement, then
+removes from the in-memory list iterating in descending order.
 
 ### `input_panel.py` — the form view
 
@@ -81,43 +128,35 @@ contact_added = Signal(str, str, str, str)   # (first, last, phone, email)
 
 It never touches the data. It emits; someone else decides what happens.
 
-### `list_panel.py` — the list view
+### `list_panel.py` — the table view
 
-A `QWidget` with a `QListWidget` and a Delete button.
+A `QWidget` with a `QTableView` and a Delete button. The panel is a dumb shell
+— it doesn't hold data and doesn't refresh. It receives a `ContactModel` via
+`set_model()`, and Qt handles all display updates through the model's signals.
+
 Emits one signal:
 
 ```python
 delete_requested = Signal(list)   # list of selected row indices
 ```
 
-Exposes one method:
-
-```python
-refresh(contacts)   # wipe and redraw the list from a snapshot
-```
-
-Like `InputPanel`, it holds no data of its own — it renders whatever it's
-handed and forgets it.
-
 ### `main_window.py` — the controller
 
-Owns the `ContactBook`, both panels, the menu bar, the status bar, and the
-dock that wraps the input form. Its job is to wire everything together:
+Owns the `Database`, the `ContactModel`, both panels, the menu bar, the status
+bar, and the dock that wraps the input form. Its job is to wire everything:
 
-- When `InputPanel.contact_added` fires → add to book → refresh list → update counter → save.
-- When `ContactListPanel.delete_requested` fires → remove from book → refresh list → update counter → save.
+- When `InputPanel.contact_added` fires → `model.add_contact(...)` → update
+  counter → status message.
+- When `ContactListPanel.delete_requested` fires → `model.remove_contacts(rows)`
+  → update counter → status message.
 
-Both handlers follow the same pattern:
-
-```
-mutate the book  →  refresh the list  →  update status bar  →  save to disk
-```
+No refresh calls. The model emits the right signals and Qt redraws only what
+changed.
 
 ### `main.py` — the process
 
-Loads the book from `contacts.json` at startup, hands it to `MainWindow`
-along with the data path, and keeps a save-on-quit safety net. Knows nothing
-about widgets.
+Opens the `Database`, passes it to `MainWindow`, wires `db.close` to
+`app.aboutToQuit`. Knows nothing about widgets.
 
 ---
 
@@ -125,14 +164,14 @@ about widgets.
 
 The window uses `QMainWindow` slots:
 
-- **Central widget** — the contact list (always visible)
+- **Central widget** — the contact table (always visible)
 - **Top dock** — the input form (`QDockWidget` wrapping `InputPanel`)
 - **Menu bar** — File (New Contact, Exit) / View (toggle input form) / Help (About)
 - **Status bar** — permanent contact counter on the right, transient
   feedback messages on the left
 
 The input dock is user-rearrangeable — drag it to any edge or float it as a
-separate window. This is standard `QDockWidget` behavior, provided by Qt.
+separate window.
 
 ---
 
@@ -142,44 +181,57 @@ separate window. This is standard `QDockWidget` behavior, provided by Qt.
 User clicks Add
   → InputPanel emits contact_added(first, last, phone, email)
   → MainWindow._add_contact receives it
-  → ContactBook.add(...)
-  → ContactListPanel.refresh(book.contacts)
-  → counter label updates, status message shows, book saved to disk
+  → ContactModel.add_contact(...)
+      → Database.insert_contact(...)       (INSERT, returns Contact with id)
+      → beginInsertRows / append / endInsertRows
+  → counter label updates, status message shows
 
 User selects rows and clicks Delete
   → ContactListPanel emits delete_requested([rows])
-  → MainWindow._delete_contact iterates rows in DESCENDING order
-  → ContactBook.remove(row) for each
-  → ContactListPanel.refresh(book.contacts)
-  → counter label updates, status message shows, book saved to disk
+  → MainWindow._delete_contact receives it
+  → ContactModel.remove_contacts(rows)
+      → translate rows → ids
+      → Database.delete_contacts(ids)      (single DELETE ... WHERE id IN (...))
+      → for each row in descending order:
+          beginRemoveRows / del / endRemoveRows
+  → counter label updates, status message shows
 ```
 
-**Why descending order?** Deleting index 1 first shifts index 3 down to 2.
+**Why descending order?** Deleting row 1 first shifts row 5 down to row 4.
 Iterating in reverse prevents deleting the wrong contact.
 
 ---
 
 ## Persistence
 
-- **On startup:** `main.py` calls `book.load("contacts.json")`.
-  - Missing file → treated as first run, file is created empty.
-  - Corrupted file → warning dialog, app starts with an empty book.
-- **After every mutation:** `MainWindow` saves the book immediately after
-  add and delete, so a crash can't lose the last change.
-- **On quit:** `app.aboutToQuit` saves again as a safety net.
+SQLite, not JSON.
 
-The JSON format is a plain array of contact objects:
+- **On startup:** `Database.__init__` opens `contacts.db`, enables WAL mode,
+  applies `synchronous=NORMAL`, and creates the table and indexes if missing.
+  Idempotent — safe to run every launch.
+- **On every mutation:** `ContactModel` calls `Database.insert_contact` or
+  `Database.delete_contacts`, each wrapped in a transaction. The data hits disk
+  immediately. A crash loses nothing.
+- **On quit:** `db.close()` on `aboutToQuit` releases the connection cleanly.
 
-```json
-[
-  {
-    "first_name": "Ada",
-    "last_name": "Lovelace",
-    "phone": "0123456789",
-    "email": "ada@example.com"
-  }
-]
+The database schema:
+
+```sql
+CREATE TABLE Contacts (
+    id          INTEGER PRIMARY KEY,
+    first_name  TEXT,
+    last_name   TEXT,
+    phone       TEXT,
+    email       TEXT
+);
+
+CREATE INDEX idx_contacts_first_name ON Contacts(first_name);
+CREATE INDEX idx_contacts_last_name  ON Contacts(last_name);
+CREATE INDEX idx_contacts_email      ON Contacts(email);
 ```
+
+WAL mode enables concurrent reads while a write is in progress — relevant once
+background sync lands in a later version.
 
 ---
 
@@ -196,12 +248,13 @@ The JSON format is a plain array of contact objects:
 
 The architecture is designed so features can be **added**, not **restructured**:
 
-- **Click a row to edit** — store the full `Contact` on each list item via
-  `UserRole`, emit an `edit_requested(Contact)` signal, populate the form.
+- **Live search** — add a `QSortFilterProxyModel` between the model and the
+  view, wire a `QLineEdit` to `setFilterFixedString`.
+- **FTS5 fuzzy search** — add a virtual FTS5 table alongside the main table,
+  query it with `MATCH`, populate the model from results.
+- **Click a row to edit** — read `selectionModel().selectedRows()` in the
+  panel, emit an `edit_requested(Contact)`, populate the form.
 - **Confirm before delete** — wrap the delete handler in a `QMessageBox.question`.
-- **Search / filter** — add a `QLineEdit` in a right-side dock, filter before
-  calling `refresh`.
-- **Sort by name** — sort `book.contacts` before refreshing.
 
 None of these require changing the model/view/controller boundaries.
 
@@ -211,15 +264,17 @@ None of these require changing the model/view/controller boundaries.
 
 | Tag | Highlights |
 |---|---|
-| `v0.1` | Initial release — tabs layout, save on close |
+| `v0.1` | Initial release — tabs layout, save on close, JSON persistence |
 | `v0.2` | Dock-based layout, menu bar, status bar, save on mutation |
-| `v0.3` | Improved Code structure and styling
+| `v0.3` | Code structure cleanup and color palette |
+| `v0.4` | SQLite persistence, `QAbstractTableModel`, `QTableView`, WAL mode |
 
 ---
 
 ## Known Limitations
 
-- No search, sort, or edit yet (planned for later versions)
-- Single file for all contacts (no multi-address-book support)
+- No search, sort, or inline edit yet (planned for later versions)
+- Single database file for all contacts (no multi-address-book support)
 - Window layout is not remembered between sessions (dock position resets to top)
-- Save failures show a warning dialog but the change stays in memory only
+- No visual empty-state ("No contacts yet") — the table is simply blank
+
