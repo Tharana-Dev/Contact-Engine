@@ -1,22 +1,24 @@
+/* ============================================================ */
+/*  Global                                                       */
+/* ============================================================ */
+
+/* ============================================================ */
+/*  Data Form                                                   */
+/* ============================================================ */
 QLabel#topic {
     font-size: 24px;
     font-weight: bold;
     color: #0078D4;
-    }
+        }
 
-QLineEdit#input {
-    min-height: 48px;
-    font-size: 14px;
-    }
 QLabel#fieldLabel {
     min-height: 48px;     
     font-size: 14px;
-    }
-QPushButton#smallBtn {
-    min-height: 32px;
-    max-height: 32px;
-    font-size: 18px;
-    }
+        }
+QLineEdit#input {
+    min-height: 48px;
+    font-size: 14px;
+        }
 QPushButton#primaryBtn {
     min-height: 32px;
     max-height: 32px;
@@ -26,13 +28,25 @@ QPushButton#primaryBtn {
     border: none;
     border-radius: 4px;
     padding: 4px 16px;
-}
+        }
+
 QPushButton#primaryBtn:hover {
     background-color: #106EBE;
-}
+        }
+
 QPushButton#primaryBtn:pressed {
     background-color: #005A9E;
-}
+        }
+QPushButton#smallBtn {
+    min-height: 32px;
+    max-height: 32px;
+    font-size: 18px;
+        }
+
+/* ============================================================ */
+/*  List Panel                                                   */
+/* ============================================================ */
+
 QPushButton#deleteBtn {
     min-height: 36px;
     font-size: 16px;
@@ -41,14 +55,18 @@ QPushButton#deleteBtn {
     border: none;
     border-radius: 4px;
     padding: 4px 16px;
-}
+        }
 QPushButton#deleteBtn:hover {
     background-color: #8E053E;
-}
+        }
 QPushButton#deleteBtn:pressed {
     background-color: #6D032F;
-}
+        }
+
+/* ============================================================ */
+/*  Status Bar                                                   */
+/* ============================================================ */
 QLabel#counterLabel {
     font-size: 20px;
     padding: 6px 12px;
-        }
+    }
