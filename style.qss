@@ -63,6 +63,35 @@ QPushButton#deleteBtn:pressed {
     background-color: #6D032F;
         }
 
+QTableView {
+    background-color: #2b2b2b;
+    alternate-background-color: #2f2f2f;
+    border: 1px solid #3a3a3a;
+    selection-background-color: #1e4a7a;
+    selection-color: #ffffff;
+        }
+
+QTableView::item {
+    padding: 8px 12px;
+    min-height: 30px;
+    border: none;
+    outline: 0;
+        }  
+
+QTableView::item:selected {
+    background-color: #1e4a7a;
+    color: #ffffff;
+        }
+
+QHeaderView::section {
+    background-color: #333333;
+    color: #e0e0e0;
+    padding: 8px 12px;
+    border: none;
+    border-bottom: 1px solid #4a4a4a;
+    font-weight: bold;
+        }
+
 /* ============================================================ */
 /*  Status Bar                                                   */
 /* ============================================================ */

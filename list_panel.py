@@ -28,9 +28,11 @@ class ContactListPanel(QWidget):
         self.table.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.setAlternatingRowColors(True)
+        self.table.setShowGrid(False)
         self.table.verticalHeader().setVisible(False)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-
+        self.table.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        
         self.outer_layout.addWidget(self.table)
 
     def _setup_buttons(self):
