@@ -268,6 +268,7 @@ None of these require changing the model/view/controller boundaries.
 | `v0.2` | Dock-based layout, menu bar, status bar, save on mutation |
 | `v0.3` | Code structure cleanup and color palette |
 | `v0.4` | SQLite persistence, `QAbstractTableModel`, `QTableView`, WAL mode |
+| `v0.4.1` | Table styling pass, form layout fixes |
 
 ---
 
