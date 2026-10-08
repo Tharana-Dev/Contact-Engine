@@ -13,6 +13,15 @@ class InputPanel(QWidget):
         # Main Layout Setup
         self.outer_layout = QVBoxLayout()
         self.setLayout(self.outer_layout)
+
+        self.content_container = QWidget()
+        self.content_container.setMinimumWidth(600)
+        self.content_container.setMaximumWidth(700)
+        self.outer_layout.addWidget(self.content_container)
+        self.outer_layout.setAlignment(self.content_container, Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)
+
+        self.content_layout = QVBoxLayout()
+        self.content_container.setLayout(self.content_layout)
         
         # Build UI Components
         self._setup_header()
@@ -23,11 +32,11 @@ class InputPanel(QWidget):
         topic = QLabel("Data Handling center")
         topic.setObjectName("topic")
         topic.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.outer_layout.addWidget(topic)
+        self.content_layout.addWidget(topic)
 
     def _setup_form_fields(self):
         self.input_layout = QVBoxLayout()
-        self.outer_layout.addLayout(self.input_layout)
+        self.content_layout.addLayout(self.input_layout)
         
         # Create fields using the extracted helper method
         self.first_name = self._create_input_row("First Name: ", "Enter Your First Name Here")
@@ -56,7 +65,7 @@ class InputPanel(QWidget):
 
     def _setup_buttons(self):
         button_layout = QHBoxLayout()
-        self.outer_layout.addLayout(button_layout)
+        self.content_layout.addLayout(button_layout)
 
         self.add_btn = QPushButton("Add")
         self.add_btn.setObjectName("primaryBtn")
