@@ -57,3 +57,13 @@ class ContactModel(QAbstractTableModel):
             self.beginRemoveRows(QModelIndex(), row, row)
             del self.contacts[row]
             self.endRemoveRows()
+
+    def load_all(self):
+        self.beginResetModel()
+        self.contacts = self.db.fetch_all()
+        self.endResetModel()
+
+    def search(self, query):
+        self.beginResetModel()
+        self.contacts = self.db.search(query)
+        self.endResetModel()
