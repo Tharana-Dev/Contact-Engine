@@ -15,7 +15,7 @@ class MainWindow(QMainWindow):
         self.contact_list = ContactListPanel()
         self.model = ContactModel(self.db)
 
-        self.contacts_num = QLabel(f"Contacts: {self.model.rowCount()}")
+        self.contacts_num = QLabel(f"Rows: {self.model.rowCount()}")
         self.contacts_num.setObjectName("counterLabel")
 
         self._build_actions()
@@ -26,6 +26,7 @@ class MainWindow(QMainWindow):
         self.contact_list.set_model(self.model)
 
         self._wire_signals()
+        self.model.modelReset.connect(self._update_counter)
 
     def _build_actions(self):
         self.new_action = QAction("Add New Contact", self)
@@ -86,11 +87,13 @@ class MainWindow(QMainWindow):
 
     def _add_contact(self, first, last, phone, email):
         self.model.add_contact(first, last, phone, email)
-        self.contacts_num.setText(f"Contacts: {self.model.rowCount()}")
+        self.contacts_num.setText(f"Rows: {self.model.rowCount()}")
         self.statusBar().showMessage("Contact added", 3000)
 
     def _delete_contact(self, rows):
         self.model.remove_contacts(rows)
         self.contacts_num.setText(f"Contacts: {self.model.rowCount()}")
         self.statusBar().showMessage("Contact(s) Removed", 3000)
-        
+
+    def _update_counter(self):
+        self.contacts_num.setText(f"Rows: {self.model.rowCount()}")
