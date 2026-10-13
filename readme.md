@@ -19,6 +19,7 @@ everything persists to a local SQLite database between sessions.
 - Dockable input form — move it, float it, close it, or toggle from the View menu
 - Menu bar with keyboard shortcuts (`Ctrl+N`, `Ctrl+Q`)
 - Status bar with live contact counter and action feedback
+- Live search across names and emails (FTS5 inverted index, 200ms debounce)
 
 ---
 
@@ -269,12 +270,13 @@ None of these require changing the model/view/controller boundaries.
 | `v0.3` | Code structure cleanup and color palette |
 | `v0.4` | SQLite persistence, `QAbstractTableModel`, `QTableView`, WAL mode |
 | `v0.4.1` | Table styling pass, form layout fixes |
+| `v0.5` | FTS5-backed search with debounce, live filtering |
 
 ---
 
 ## Known Limitations
 
-- No search, sort, or inline edit yet (planned for later versions)
+- No sort, or inline edit yet (planned for later versions)
 - Single database file for all contacts (no multi-address-book support)
 - Window layout is not remembered between sessions (dock position resets to top)
 - No visual empty-state ("No contacts yet") — the table is simply blank
