@@ -92,6 +92,24 @@ QHeaderView::section {
     font-weight: bold;
         }
 
+QLineEdit#searchBar {
+    background-color: #2b2b2b;
+    border: 1px solid #4a4a4a;
+    border-radius: 4px;
+    padding: 6px 12px;
+    min-height: 32px;
+    font-size: 14px;
+    color: #e0e0e0;
+}
+
+QLineEdit#searchBar:focus {
+    border: 1px solid #0078D4;
+}
+
+QLineEdit#searchBar::placeholder {
+    color: #7a7a7a;
+}
+
 /* ============================================================ */
 /*  Status Bar                                                   */
 /* ============================================================ */

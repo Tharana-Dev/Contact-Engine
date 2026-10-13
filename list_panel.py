@@ -31,6 +31,7 @@ class ContactListPanel(QWidget):
 
     def _setup_search_bar(self):
         self.search_bar = QLineEdit()
+        self.search_bar.setObjectName("searchBar")
         self.search_bar.setPlaceholderText("Search contacts...")
         self.search_bar.textChanged.connect(self.timer.start)
         self.timer.timeout.connect(self._on_search_timeout)
