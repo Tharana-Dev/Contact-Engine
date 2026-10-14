@@ -273,6 +273,7 @@ None of these require changing the model/view/controller boundaries.
 | `v0.4.1` | Table styling pass, form layout fixes |
 | `v0.5` | FTS5-backed search with debounce, live filtering |
 | `v0.5.1` | Input validation — regex validators, inline error feedback |
+| `v0.5.2` | Cleanup pass — no new features, code and QSS tidy |
 
 ---
 
