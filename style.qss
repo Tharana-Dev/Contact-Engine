@@ -42,7 +42,9 @@ QPushButton#smallBtn {
     max-height: 32px;
     font-size: 18px;
         }
+QLineEdit[error="true"] { border: 2px solid #ff6b6b; }
 
+QLabel#errorLabel { color: #ff6b6b; font-size: 18px; }
 /* ============================================================ */
 /*  List Panel                                                   */
 /* ============================================================ */

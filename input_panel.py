@@ -1,5 +1,6 @@
-from PySide6.QtWidgets import QWidget, QMessageBox, QLabel, QPushButton, QHBoxLayout, QVBoxLayout, QLineEdit
-from PySide6.QtCore import Signal, Qt
+from PySide6.QtWidgets import QWidget,QLabel, QPushButton, QHBoxLayout, QVBoxLayout, QLineEdit
+from PySide6.QtCore import Signal, Qt, QRegularExpression
+from PySide6.QtGui import QRegularExpressionValidator
 
 import sys
 from PySide6.QtWidgets import QApplication
@@ -9,7 +10,16 @@ class InputPanel(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        
+
+        self.regex_patterns = {
+            "first_name": r"[\p{L}\s'-]*",
+            "last_name": r"[\p{L}\s'-]*",
+            "email": r"[\p{L}\p{N}@._%+\-]*",
+            "phone": r"[\d\s+\-().]*",
+            "email_on_submit": r"^[\p{L}\p{N}._%+\-]+@[\p{L}\p{N}.\-]+\.[\p{L}]{2,}$",
+            "phone_on_submit": r"^[+]?[\d\s\-().]{7,20}$"
+        }
+
         # Main Layout Setup
         self.outer_layout = QVBoxLayout()
         self.setLayout(self.outer_layout)
@@ -39,29 +49,73 @@ class InputPanel(QWidget):
         self.content_layout.addLayout(self.input_layout)
         
         # Create fields using the extracted helper method
-        self.first_name = self._create_input_row("First Name: ", "Enter Your First Name Here")
-        self.last_name = self._create_input_row("Last Name: ", "Enter Your Last Name Here")
-        self.email = self._create_input_row("Email: ", "Enter Your Email Here")
-        self.phone = self._create_input_row("Phone: ", "Enter Your Contact Number Here")
+        self.first_name, self.first_name_error = self._create_input_row_with_validator(
+            "First Name: ",
+            "Enter Your First Name Here",
+            self.regex_patterns.get("first_name", r"[\p{L}\s'\-]*")
+        )
 
-    def _create_input_row(self, label_text, placeholder_text):
+        self.last_name, self.last_name_error = self._create_input_row_with_validator(
+            "Last Name: ",
+            "Enter Your Last Name Here",
+            self.regex_patterns.get("last_name", r"[\p{L}\s'\-]*")
+        )
+
+        self.email, self.email_error = self._create_input_row_with_validator(
+            "Email: ",
+            "Enter Your Email Here",
+            self.regex_patterns.get('email', r"[\p{L}\p{N}@._%+\-]*")
+        )
+
+        self.phone, self.phone_error = self._create_input_row_with_validator(
+            "Phone: ",
+            "Enter Your Contact Number Here",
+            self.regex_patterns.get('phone', r"[\d\s+\-().]*")
+        )
+
+        self.first_name.textChanged.connect(
+            lambda _, f=self.first_name, l=self.first_name_error: self._set_error(f, l, False))
+        self.last_name.textChanged.connect(
+            lambda _, f=self.last_name, l=self.last_name_error: self._set_error(f, l, False))
+        self.email.textChanged.connect(
+            lambda _, f=self.email, l=self.email_error: self._set_error(f, l, False))
+        self.phone.textChanged.connect(
+            lambda _, f=self.phone, l=self.phone_error: self._set_error(f, l, False))
+
+    def _create_input_row_with_validator(self, label_text, placeholder_text, pattern):
         """Helper method to construct a single form row."""
         row_layout = QHBoxLayout()
         row_layout.setSpacing(12)
         self.input_layout.addLayout(row_layout)
 
         label = QLabel(label_text)
-        label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        label.setAlignment(Qt.AlignmentFlag.AlignLeft |
+                           Qt.AlignmentFlag.AlignVCenter)
         label.setObjectName("fieldLabel")
 
         line_edit = QLineEdit()
         line_edit.setObjectName("input")
         line_edit.setPlaceholderText(placeholder_text)
+        line_edit.setValidator(QRegularExpressionValidator(
+            QRegularExpression(pattern), self))
 
-        row_layout.addWidget(label, 4)
+
+        error_label = QLabel("")
+        error_label.setObjectName('errorLabel')
+        error_label.setVisible(False)
+
+        left_widget = QWidget()
+        left_layout = QVBoxLayout(left_widget)
+        left_layout.setContentsMargins(0, 0, 0, 0)   # kill default padding
+        left_layout.setSpacing(2)
+
+        left_layout.addWidget(label)
+        left_layout.addWidget(error_label)
+
+        row_layout.addWidget(left_widget, 4)
         row_layout.addWidget(line_edit, 6)
-        
-        return line_edit
+
+        return (line_edit, error_label)
 
     def _setup_buttons(self):
         button_layout = QHBoxLayout()
@@ -80,22 +134,69 @@ class InputPanel(QWidget):
         self.reset_btn.clicked.connect(self._clear_fields)
 
     def _on_add_clicked(self):
-        first = self.first_name.text().strip()
-        last = self.last_name.text().strip()
-        phone = self.phone.text().strip()
-        email = self.email.text().strip()
+        first_name_text = self.first_name.text()
+        last_name_text = self.last_name.text()
+        email_text = self.email.text()
+        phone_text = self.phone.text()
 
-        if not (first and last and phone and email):
-            return
+        email_pattern = self.regex_patterns.get(
+            'email_on_submit', r'^[\p{L}\p{N}._%+\-]+@[\p{L}\p{N}.\-]+\.[\p{L}]{2,}$')
+        email_re = QRegularExpression(email_pattern)
+        email_match = email_re.match(email_text)
 
-        self.contact_added.emit(first, last, phone, email)
+        phone_pattern = self.regex_patterns.get(
+            'phone_on_submit', r'^[+]?[\d\s\-().]{7,20}$')
+        phone_re = QRegularExpression(phone_pattern)
+        phone_match = phone_re.match(phone_text)
+
+        self._set_error(self.first_name, self.first_name_error, False)
+        self._set_error(self.last_name, self.last_name_error, False)
+        self._set_error(self.email, self.email_error, False)
+        self._set_error(self.phone, self.phone_error, False)
+
+        has_errors = False
+
+        if not first_name_text:
+            self._set_error(self.first_name,
+                            self.first_name_error, True, "Required")
+            has_errors = True
+        if not last_name_text:
+            self._set_error(
+                self.last_name, self.last_name_error, True, "Required")
+            has_errors = True
+        if not email_match.hasMatch():
+            self._set_error(self.email, self.email_error,
+                            True, "Invalid email")
+            has_errors = True
+        if not phone_match.hasMatch():
+            self._set_error(self.phone, self.phone_error,
+                            True, "Invalid phone")
+            has_errors = True
+
+        if  has_errors:
+                return
+
+        self.contact_added.emit(first_name_text, last_name_text, phone_text, email_text)
         self._clear_fields()
+
+        
 
     def _clear_fields(self):
         self.first_name.clear()
         self.last_name.clear()
         self.email.clear()
         self.phone.clear()
+
+    def _set_error(self, field, label, is_error, message=""):
+        field.setProperty("error", is_error)
+        field.style().unpolish(field)
+        field.style().polish(field)
+
+        if is_error:
+            label.setText(message)
+            label.setVisible(True)
+        else:
+            label.setVisible(False)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

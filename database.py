@@ -1,5 +1,6 @@
 import sqlite3
 from contact import Contact
+from dataclasses import replace
 
 
 class Database:
@@ -83,6 +84,14 @@ class Database:
         if not self._is_connected():
             raise sqlite3.ProgrammingError("Cannot execute query: Database is disconnected.")
 
+        contact = Contact(
+            id=None,
+            first_name=first,
+            last_name=last,
+            phone=phone,
+            email=email
+        )
+
         with self._conn:
             self._cursor.execute(
                 """
@@ -93,14 +102,8 @@ class Database:
             )
             generated_id = self._cursor.lastrowid
 
-        return Contact(
-            id=generated_id,
-            first_name=first,
-            last_name=last,
-            phone=phone,
-            email=email
-        )
-
+        return replace(contact, id=generated_id)
+    
     def fetch_all(self) -> list[Contact]:
         """Reads every row, returns as Contact objects, ordered by id ascending."""
         if not self._is_connected():
