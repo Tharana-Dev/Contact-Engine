@@ -19,6 +19,9 @@ QLineEdit#input {
     min-height: 48px;
     font-size: 14px;
         }
+QLineEdit#searchBar:focus {
+    border: 1px solid #0078D4;
+}
 QPushButton#primaryBtn {
     min-height: 32px;
     max-height: 32px;
@@ -44,7 +47,8 @@ QPushButton#smallBtn {
         }
 QLineEdit[error="true"] { border: 2px solid #ff6b6b; }
 
-QLabel#errorLabel { color: #ff6b6b; font-size: 18px; }
+QLabel#errorLabel { color: #ff6b6b; font-size: 12px; }
+
 /* ============================================================ */
 /*  List Panel                                                   */
 /* ============================================================ */
@@ -103,6 +107,10 @@ QLineEdit#searchBar {
     font-size: 14px;
     color: #e0e0e0;
 }
+
+/* ============================================================ */
+/*  Search_Bar                                                  */
+/* ============================================================ */
 
 QLineEdit#searchBar:focus {
     border: 1px solid #0078D4;
