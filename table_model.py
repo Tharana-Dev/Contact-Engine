@@ -50,7 +50,7 @@ class ContactModel(QAbstractTableModel):
         return res
 
     def remove_contacts(self, rows: list[int]) -> None:
-        ids = [self.contacts[r].id for r in rows if self.contacts[r].id is not None]
+        ids = [self.contacts[r].id for r in rows]
         self.db.delete_contacts(ids)
 
         for row in sorted(rows, reverse=True):
@@ -58,12 +58,12 @@ class ContactModel(QAbstractTableModel):
             del self.contacts[row]
             self.endRemoveRows()
 
-    def load_all(self):
+    def load_all(self) -> None:
         self.beginResetModel()
         self.contacts = self.db.fetch_all()
         self.endResetModel()
 
-    def search(self, query):
+    def search(self, query)->None:
         self.beginResetModel()
         self.contacts = self.db.search(query)
         self.endResetModel()
