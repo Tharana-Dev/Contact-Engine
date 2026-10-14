@@ -14,6 +14,7 @@ everything persists to a local SQLite database between sessions.
 - View all contacts in a sortable table (`QTableView`)
 - Multi-select and delete contacts
 - Instant persistence — every insert/delete is committed to SQLite immediately
+- Input validation — Unicode-aware name/email/phone checks with inline error feedback
 - WAL mode for concurrent reads
 - Indexed search columns (first name, last name, email)
 - Dockable input form — move it, float it, close it, or toggle from the View menu
@@ -271,6 +272,7 @@ None of these require changing the model/view/controller boundaries.
 | `v0.4` | SQLite persistence, `QAbstractTableModel`, `QTableView`, WAL mode |
 | `v0.4.1` | Table styling pass, form layout fixes |
 | `v0.5` | FTS5-backed search with debounce, live filtering |
+| `v0.5.1` | Input validation — regex validators, inline error feedback |
 
 ---
 
