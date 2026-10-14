@@ -1,12 +1,14 @@
-from PySide6.QtWidgets import QWidget,QLabel, QPushButton, QHBoxLayout, QVBoxLayout, QLineEdit
+from PySide6.QtWidgets import QWidget, QLabel, QPushButton, QHBoxLayout, QVBoxLayout, QLineEdit
 from PySide6.QtCore import Signal, Qt, QRegularExpression
 from PySide6.QtGui import QRegularExpressionValidator
 
 import sys
 from PySide6.QtWidgets import QApplication
 
+
 class InputPanel(QWidget):
-    contact_added = Signal(str, str, str, str) # (first_name, last_name, phone, email)
+    # (first_name, last_name, phone, email)
+    contact_added = Signal(str, str, str, str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -28,11 +30,12 @@ class InputPanel(QWidget):
         self.content_container.setMinimumWidth(600)
         self.content_container.setMaximumWidth(700)
         self.outer_layout.addWidget(self.content_container)
-        self.outer_layout.setAlignment(self.content_container, Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)
+        self.outer_layout.setAlignment(
+            self.content_container, Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)
 
         self.content_layout = QVBoxLayout()
         self.content_container.setLayout(self.content_layout)
-        
+
         # Build UI Components
         self._setup_header()
         self._setup_form_fields()
@@ -47,7 +50,7 @@ class InputPanel(QWidget):
     def _setup_form_fields(self):
         self.input_layout = QVBoxLayout()
         self.content_layout.addLayout(self.input_layout)
-        
+
         # Create fields using the extracted helper method
         self.first_name, self.first_name_error = self._create_input_row_with_validator(
             "First Name: ",
@@ -98,7 +101,6 @@ class InputPanel(QWidget):
         line_edit.setPlaceholderText(placeholder_text)
         line_edit.setValidator(QRegularExpressionValidator(
             QRegularExpression(pattern), self))
-
 
         error_label = QLabel("")
         error_label.setObjectName('errorLabel')
@@ -173,13 +175,20 @@ class InputPanel(QWidget):
                             True, "Invalid phone")
             has_errors = True
 
-        if  has_errors:
-                return
+        if has_errors:
+            return
 
-        self.contact_added.emit(first_name_text, last_name_text, phone_text, email_text)
+        self._set_error(self.first_name, self.first_name_error, False)
+        self._set_error(self.last_name, self.last_name_error, False)
+        self._set_error(self.email, self.email_error, False)
+        self._set_error(self.phone, self.phone_error, False)
+
         self._clear_fields()
 
-        
+        self.contact_added.emit(
+            first_name_text, last_name_text, phone_text, email_text)
+
+
 
     def _clear_fields(self):
         self.first_name.clear()
@@ -197,6 +206,7 @@ class InputPanel(QWidget):
             label.setVisible(True)
         else:
             label.setVisible(False)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
