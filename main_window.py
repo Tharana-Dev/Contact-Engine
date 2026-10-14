@@ -79,7 +79,7 @@ class MainWindow(QMainWindow):
         status_bar.addPermanentWidget(self.contacts_num)
 
     def _show_about(self):
-        QMessageBox.about(self, "About", "Contact Engine\n  Version 0.4")
+        QMessageBox.about(self, "About", "Contact Engine\n  Version 0.5.2")
     
     def _on_create_new_triggered(self):
         self.form_dock.show()
@@ -87,12 +87,12 @@ class MainWindow(QMainWindow):
 
     def _add_contact(self, first, last, phone, email):
         self.model.add_contact(first, last, phone, email)
-        self.contacts_num.setText(f"Rows: {self.model.rowCount()}")
+        self._update_counter()
         self.statusBar().showMessage("Contact added", 3000)
 
     def _delete_contact(self, rows):
         self.model.remove_contacts(rows)
-        self.contacts_num.setText(f"Contacts: {self.model.rowCount()}")
+        self._update_counter()
         self.statusBar().showMessage("Contact(s) Removed", 3000)
 
     def _update_counter(self):
