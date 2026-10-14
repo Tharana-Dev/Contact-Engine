@@ -66,8 +66,8 @@ class Database:
                     VALUES('delete', old.id, old.first_name, old.last_name, old.email);
                 END;
             """)
-#               -- Update trigger: no current code path updates contacts, but keeping this
-#               -- ensures FTS stays in sync when the edit feature lands (v0.5.1)
+#-- Update trigger: no current code path updates contacts, but keeping this
+#-- ensures FTS stays in sync when the edit feature lands (v0.6)
             self._cursor.execute("""
                 CREATE TRIGGER IF NOT EXISTS contacts_after_update 
                 AFTER UPDATE ON contacts BEGIN
@@ -145,7 +145,7 @@ class Database:
 
     def _is_connected(self) -> bool:
         """Verifies that the database connection is alive and active."""
-        return bool(self._connected)
+        return self._connected
 
     def search(self, query: str) -> list[Contact]:
         if not self._is_connected():
