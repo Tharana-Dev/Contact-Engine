@@ -9,8 +9,7 @@ class ContactListPanel(QWidget):
         super().__init__(parent)
 
         # Main Layout Setup
-        self.outer_layout = QVBoxLayout(self
-                                        )
+        self.outer_layout = QVBoxLayout(self)
         self.timer = QTimer(self)
         self.timer.setSingleShot(True)
         self.timer.setInterval(200)
@@ -77,7 +76,8 @@ class ContactListPanel(QWidget):
         self.table.setModel(model)
 
     def _on_search_timeout(self):
-        if self.model is None: return
+        if self.model is None:
+            return
 
         text = self.search_bar.text()
         self.model.search(text)
