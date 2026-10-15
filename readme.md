@@ -1,7 +1,7 @@
 # Contact Engine
 
 A small desktop contact manager built with **PySide6 (Qt for Python)**.
-Add contacts through a form, view them in a sortable table, delete them — and
+Add contacts through a form, view them in a table, delete them — and
 everything persists to a local SQLite database between sessions.
 
 ![Main window](screenshots/main_new.png)
@@ -11,16 +11,17 @@ everything persists to a local SQLite database between sessions.
 ## Features
 
 - Add contacts (first name, last name, phone, email)
-- View all contacts in a sortable table (`QTableView`)
+- View all contacts in a `QTableView` backed by a custom `QAbstractTableModel`
 - Multi-select and delete contacts
-- Instant persistence — every insert/delete is committed to SQLite immediately
+- Live search across names and emails (FTS5 inverted index, 200ms debounce)
 - Input validation — Unicode-aware name/email/phone checks with inline error feedback
+- Export to CSV, JSON, or vCard via `QFileDialog`
+- Instant persistence — every insert/delete is committed to SQLite immediately
 - WAL mode for concurrent reads
-- Indexed search columns (first name, last name, email)
+- Indexed columns for fast exact-match lookups
 - Dockable input form — move it, float it, close it, or toggle from the View menu
 - Menu bar with keyboard shortcuts (`Ctrl+N`, `Ctrl+Q`)
-- Status bar with live contact counter and action feedback
-- Live search across names and emails (FTS5 inverted index, 200ms debounce)
+- Status bar with live row counter and action feedback
 
 ---
 
@@ -40,13 +41,13 @@ pip install PySide6
 ## Running
 
 ```bash
-git clone https://github.com/Tharana-Dev/contact-engine.git
-cd contact-engine
+git clone https://github.com/Tharana-Dev/Contact-Engine.git
+cd Contact-Engine
 python main.py
 ```
 
 On first run, `contacts.db` is created automatically in the working directory
-with the schema and indexes applied.
+with the schema, indexes, FTS5 virtual table, and triggers applied.
 
 ---
 
@@ -57,10 +58,11 @@ with the schema and indexes applied.
 ├── main.py            # entry point: builds app, opens DB, shows window
 ├── main_window.py     # QMainWindow: owns model, panels, menus, docks, status
 ├── input_panel.py     # form for entering a new contact
-├── list_panel.py      # QTableView + Delete button
+├── list_panel.py      # QTableView + search box + Delete button
 ├── table_model.py     # ContactModel — QAbstractTableModel subclass
-├── database.py        # SQLite connection, schema, and all SQL
+├── database.py        # SQLite connection, schema, FTS5, all SQL
 ├── contact.py         # Contact dataclass
+├── exporter.py        # CSV / JSON / vCard writers
 ├── style.qss          # application-wide stylesheet
 └── contacts.db        # auto-generated SQLite database
 ```
@@ -69,7 +71,7 @@ with the schema and indexes applied.
 
 ## Architecture
 
-The app follows a **model / view / controller** split, with a clean data layer
+The app follows a **model / view / controller** split with a clean data layer
 underneath.
 
 ### `contact.py` — the domain model
@@ -85,8 +87,8 @@ DB-assigned primary key afterward.
 ### `database.py` — the data layer
 
 - **`Database`** — owns the SQLite connection. Enables WAL mode and
-  `synchronous=NORMAL` on startup, creates the schema and indexes if missing.
-  All SQL in the project lives here.
+  `synchronous=NORMAL` on startup, creates the schema, indexes, FTS5 virtual
+  table, and sync triggers if missing. All SQL in the project lives here.
 
 Methods:
 
@@ -94,6 +96,7 @@ Methods:
 insert_contact(first, last, phone, email) -> Contact
 fetch_all() -> list[Contact]
 delete_contacts(ids: list[int]) -> None
+search(query: str) -> list[Contact]
 close() -> None
 ```
 
@@ -112,6 +115,8 @@ Public mutation methods:
 ```python
 add_contact(first, last, phone, email) -> Contact
 remove_contacts(rows: list[int]) -> None   # rows translated to ids internally
+load_all() -> None                          # re-fetch all from the DB
+search(query: str) -> None                  # replace in-memory list with FTS5 results
 ```
 
 **Why rows vs ids matters:** the view talks in row indices (0, 1, 2, ...) but
@@ -121,7 +126,11 @@ removes from the in-memory list iterating in descending order.
 
 ### `input_panel.py` — the form view
 
-A `QWidget` with four `QLineEdit`s and Add / Reset buttons.
+A `QWidget` with four `QLineEdit`s and Add / Reset buttons. Each field has a
+`QRegularExpressionValidator` blocking invalid characters at the keystroke
+level, plus format checks on submit (email structure, phone length) that
+surface as inline error labels.
+
 Emits one signal:
 
 ```python
@@ -132,9 +141,11 @@ It never touches the data. It emits; someone else decides what happens.
 
 ### `list_panel.py` — the table view
 
-A `QWidget` with a `QTableView` and a Delete button. The panel is a dumb shell
-— it doesn't hold data and doesn't refresh. It receives a `ContactModel` via
-`set_model()`, and Qt handles all display updates through the model's signals.
+A `QWidget` with a `QTableView`, a search box, and a Delete button. The panel
+is a dumb shell — it doesn't hold data and doesn't refresh. It receives a
+`ContactModel` via `set_model()`, and Qt handles all display updates through
+the model's signals. The search box is debounced via a 200ms single-shot
+`QTimer` and calls `model.search()` on timeout.
 
 Emits one signal:
 
@@ -142,15 +153,32 @@ Emits one signal:
 delete_requested = Signal(list)   # list of selected row indices
 ```
 
+### `exporter.py` — the export writers
+
+- **`Exporter`** — takes a `list[Contact]` and writes to a caller-supplied path
+  in one of three formats.
+
+Methods:
+
+```python
+write_to_csv(path: str) -> None
+write_to_json(path: str) -> None
+write_to_vcard(path: str) -> None
+```
+
+No Qt. No display. All three open with `encoding="utf-8"` so accented
+characters survive the round trip. CSV uses the `csv` module for escaping;
+JSON streams one element at a time with manual bracket/comma handling; vCard
+writes one `BEGIN:VCARD` / `END:VCARD` block per contact.
+
 ### `main_window.py` — the controller
 
 Owns the `Database`, the `ContactModel`, both panels, the menu bar, the status
-bar, and the dock that wraps the input form. Its job is to wire everything:
+bar, the dock, and the export handlers. Its job is to wire everything:
 
-- When `InputPanel.contact_added` fires → `model.add_contact(...)` → update
-  counter → status message.
-- When `ContactListPanel.delete_requested` fires → `model.remove_contacts(rows)`
-  → update counter → status message.
+- `InputPanel.contact_added` → `model.add_contact(...)` → update counter → status message.
+- `ContactListPanel.delete_requested` → `model.remove_contacts(rows)` → update counter → status message.
+- Export actions → `QFileDialog.getSaveFileName` → `Exporter` → status message.
 
 No refresh calls. The model emits the right signals and Qt redraws only what
 changed.
@@ -168,9 +196,10 @@ The window uses `QMainWindow` slots:
 
 - **Central widget** — the contact table (always visible)
 - **Top dock** — the input form (`QDockWidget` wrapping `InputPanel`)
-- **Menu bar** — File (New Contact, Exit) / View (toggle input form) / Help (About)
-- **Status bar** — permanent contact counter on the right, transient
-  feedback messages on the left
+- **Menu bar** — File (New Contact, Export → CSV/JSON/vCard, Exit) / View
+  (toggle input form) / Help (About)
+- **Status bar** — permanent row counter on the right, transient feedback
+  messages on the left
 
 The input dock is user-rearrangeable — drag it to any edge or float it as a
 separate window.
@@ -181,7 +210,7 @@ separate window.
 
 ```
 User clicks Add
-  → InputPanel emits contact_added(first, last, phone, email)
+  → InputPanel validates, emits contact_added(first, last, phone, email)
   → MainWindow._add_contact receives it
   → ContactModel.add_contact(...)
       → Database.insert_contact(...)       (INSERT, returns Contact with id)
@@ -197,10 +226,24 @@ User selects rows and clicks Delete
       → for each row in descending order:
           beginRemoveRows / del / endRemoveRows
   → counter label updates, status message shows
+
+User types in the search box
+  → 200ms debounce timer restarts on each keystroke
+  → On timer timeout: ContactModel.search(text)
+      → Database.search(text)              (FTS5 MATCH, prefix-expanded, sanitized)
+      → beginResetModel / replace contacts / endResetModel
+  → table redraws with matching rows, counter updates
+
+User picks File → Export → CSV / JSON / vCard
+  → QFileDialog.getSaveFileName shows picker
+  → If cancelled: return
+  → If extension missing: append it
+  → Exporter(contacts).write_to_<format>(path)
+  → status bar confirms, or QMessageBox on OSError
 ```
 
-**Why descending order?** Deleting row 1 first shifts row 5 down to row 4.
-Iterating in reverse prevents deleting the wrong contact.
+**Why descending order for deletes?** Deleting row 1 first shifts row 5 down to
+row 4. Iterating in reverse prevents deleting the wrong contact.
 
 ---
 
@@ -209,14 +252,14 @@ Iterating in reverse prevents deleting the wrong contact.
 SQLite, not JSON.
 
 - **On startup:** `Database.__init__` opens `contacts.db`, enables WAL mode,
-  applies `synchronous=NORMAL`, and creates the table and indexes if missing.
-  Idempotent — safe to run every launch.
+  applies `synchronous=NORMAL`, and creates the schema, indexes, FTS5 virtual
+  table, and sync triggers if missing. Idempotent — safe to run every launch.
 - **On every mutation:** `ContactModel` calls `Database.insert_contact` or
   `Database.delete_contacts`, each wrapped in a transaction. The data hits disk
   immediately. A crash loses nothing.
 - **On quit:** `db.close()` on `aboutToQuit` releases the connection cleanly.
 
-The database schema:
+The main schema:
 
 ```sql
 CREATE TABLE Contacts (
@@ -231,6 +274,10 @@ CREATE INDEX idx_contacts_first_name ON Contacts(first_name);
 CREATE INDEX idx_contacts_last_name  ON Contacts(last_name);
 CREATE INDEX idx_contacts_email      ON Contacts(email);
 ```
+
+A parallel FTS5 virtual table (`contacts_fts`) indexes `first_name`,
+`last_name`, and `email` in external-content mode, kept in sync by three
+triggers. `search()` queries it with `MATCH`.
 
 WAL mode enables concurrent reads while a write is in progress — relevant once
 background sync lands in a later version.
@@ -250,13 +297,15 @@ background sync lands in a later version.
 
 The architecture is designed so features can be **added**, not **restructured**:
 
-- **Live search** — add a `QSortFilterProxyModel` between the model and the
-  view, wire a `QLineEdit` to `setFilterFixedString`.
-- **FTS5 fuzzy search** — add a virtual FTS5 table alongside the main table,
-  query it with `MATCH`, populate the model from results.
 - **Click a row to edit** — read `selectionModel().selectedRows()` in the
   panel, emit an `edit_requested(Contact)`, populate the form.
 - **Confirm before delete** — wrap the delete handler in a `QMessageBox.question`.
+- **Import from CSV / vCard** — a `QFileDialog.getOpenFileName`, a parser that
+  yields `Contact` objects, then `model.add_contact` in a loop.
+- **Sort by column** — implement `sort()` on the model, or wrap it in a
+  `QSortFilterProxyModel`.
+- **Streamed export for large datasets** — replace the JSON writer's
+  build-then-write with a generator pipeline.
 
 None of these require changing the model/view/controller boundaries.
 
@@ -274,13 +323,15 @@ None of these require changing the model/view/controller boundaries.
 | `v0.5` | FTS5-backed search with debounce, live filtering |
 | `v0.5.1` | Input validation — regex validators, inline error feedback |
 | `v0.5.2` | Cleanup pass — no new features, code and QSS tidy |
+| `v0.6` | Export engine — CSV, JSON, and vCard with file dialog |
 
 ---
 
 ## Known Limitations
 
-- No sort, or inline edit yet (planned for later versions)
+- No sort or inline edit yet (planned for later versions)
 - Single database file for all contacts (no multi-address-book support)
 - Window layout is not remembered between sessions (dock position resets to top)
 - No visual empty-state ("No contacts yet") — the table is simply blank
-
+- Export loads the full contact list into memory; fine up to ~100k rows,
+  would need streaming past that
