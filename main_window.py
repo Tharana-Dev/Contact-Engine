@@ -7,6 +7,12 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction, QKeySequence
 from exporter import Exporter
 
+EXPORT_FORMATS = {
+    "csv":   ("Export to CSV",   "contacts.csv",   "CSV (*.csv)",   ".csv",   "write_to_csv"),
+    "json":  ("Export to JSON",  "contacts.json",  "JSON (*.json)", ".json",  "write_to_json"),
+    "vcard": ("Export to vCard", "contacts.vcf",   "vCard (*.vcf)", ".vcf",   "write_to_vcard"),
+}
+
 class MainWindow(QMainWindow):
     def __init__(self, database: Database):
         super().__init__()
@@ -47,17 +53,17 @@ class MainWindow(QMainWindow):
         self.act_about.setStatusTip("See app details")
 
         self.export_csv_action = QAction("CSV", self)
-        self.export_csv_action.triggered.connect(self._export_csv)
+        self.export_csv_action.triggered.connect(lambda: self._export_as("csv"))
         self.export_csv_action.setStatusTip(
             "Export the contacts as a .csv file.")
 
         self.export_json_action = QAction("JSON", self)
-        self.export_json_action.triggered.connect(self._export_json)
+        self.export_json_action.triggered.connect(lambda: self._export_as("json"))
         self.export_json_action.setStatusTip(
             "Export the contacts as a .json file.")
 
         self.export_vcard_action = QAction("vCard", self)
-        self.export_vcard_action.triggered.connect(self._export_vcard)
+        self.export_vcard_action.triggered.connect(lambda: self._export_as("vCard"))
         self.export_vcard_action.setStatusTip(
             "Export the contacts as a .vcf file.")
 
@@ -122,44 +128,18 @@ class MainWindow(QMainWindow):
         self.contacts_num.setText(f"Rows: {self.model.rowCount()}")
 
     
-    def _export_csv(self):
-        path, _ = QFileDialog.getSaveFileName(
-            self, "Export to CSV", "contacts.csv", "CSV (*.csv)")
-        if not path:
-            return
-        if not path.endswith(".csv"):
-            path += ".csv"
-        exporter = Exporter(self.model.contacts)
-        try:
-            exporter.write_to_csv(path)
-            self.statusBar().showMessage(f"Exported {self.model.rowCount()} contacts", 3000)
-        except OSError as e:
-            QMessageBox.warning(self, "Export failed", str(e))
-
-    def _export_json(self):
-        path, _ = QFileDialog.getSaveFileName(
-            self, "Export to JSON", "contacts.json", "JSON (*.json)")
-        if not path:
-            return
-        if not path.endswith(".json"):
-            path += ".json"
-        exporter = Exporter(self.model.contacts)
-        try:
-            exporter.write_to_json(path)
-            self.statusBar().showMessage(f"Exported {self.model.rowCount()} contacts", 3000)
-        except OSError as e:
-            QMessageBox.warning(self, "Export failed", str(e))
-
-    def _export_vcard(self):
-        path, _ = QFileDialog.getSaveFileName(
-            self, "Export to vCard", "contacts.vcf", "vCard (*.vcf)")
-        if not path:
-            return
-        if not path.endswith(".vcf"):
-            path += ".vcf"
-        exporter = Exporter(self.model.contacts)
-        try:
-            exporter.write_to_vcard(path)
-            self.statusBar().showMessage(f"Exported {self.model.rowCount()} contacts", 3000)
-        except OSError as e:
-            QMessageBox.warning(self, "Export failed", str(e))
+    def _export_as(self, fmt):
+        export_format = EXPORT_FORMATS.get(fmt,())
+        if export_format:
+            path, _ = QFileDialog.getSaveFileName(
+                self, export_format[0], export_format[1], export_format[2])
+            if not path:
+                return
+            if not path.endswith(export_format[3]):
+                path += export_format[3]
+            exporter = Exporter(self.model.contacts)
+            try:
+                getattr(exporter, export_format[4])(path)
+                self.statusBar().showMessage(f"Exported {self.model.rowCount()} contacts", 3000)
+            except OSError as e:
+                QMessageBox.warning(self, "Export failed", str(e))
