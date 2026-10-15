@@ -2,10 +2,10 @@ from input_panel import InputPanel
 from list_panel import ContactListPanel
 from table_model import ContactModel
 from database import Database
-from PySide6.QtWidgets import QMainWindow, QDockWidget, QMessageBox, QLabel
+from PySide6.QtWidgets import QMainWindow, QDockWidget, QFileDialog, QMessageBox, QLabel
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction, QKeySequence
-
+from exporter import Exporter
 
 class MainWindow(QMainWindow):
     def __init__(self, database: Database):
@@ -36,7 +36,7 @@ class MainWindow(QMainWindow):
 
         self.close_action = QAction("Exit", self)
         self.close_action.setShortcuts([
-            QKeySequence(QKeySequence.StandardKey.Quit), 
+            QKeySequence(QKeySequence.StandardKey.Quit),
             QKeySequence("Ctrl+Q")
         ])
         self.close_action.triggered.connect(self.close)
@@ -46,9 +46,24 @@ class MainWindow(QMainWindow):
         self.act_about.triggered.connect(self._show_about)
         self.act_about.setStatusTip("See app details")
 
+        self.export_csv_action = QAction("CSV", self)
+        self.export_csv_action.triggered.connect(self._export_csv)
+        self.export_csv_action.setStatusTip(
+            "Export the contacts as a .csv file.")
+
+        self.export_json_action = QAction("JSON", self)
+        self.export_json_action.triggered.connect(self._export_json)
+        self.export_json_action.setStatusTip(
+            "Export the contacts as a .json file.")
+
+        self.export_vcard_action = QAction("vCard", self)
+        self.export_vcard_action.triggered.connect(self._export_vcard)
+        self.export_vcard_action.setStatusTip(
+            "Export the contacts as a .vcf file.")
+
     def _init_ui(self):
         self.setWindowTitle("Contact Engine")
-        self.setMinimumSize(900,800)
+        self.setMinimumSize(900, 800)
         self.setCentralWidget(self.contact_list)
 
     def _build_dock(self):
@@ -65,6 +80,14 @@ class MainWindow(QMainWindow):
 
         file_menu = menu_bar.addMenu("File")
         file_menu.addAction(self.new_action)
+
+        file_menu.addSeparator()
+
+        export_menu = file_menu.addMenu("Export")
+        export_menu.addAction(self.export_csv_action)
+        export_menu.addAction(self.export_json_action)
+        export_menu.addAction(self.export_vcard_action)
+
         file_menu.addSeparator()
         file_menu.addAction(self.close_action)
 
@@ -79,8 +102,8 @@ class MainWindow(QMainWindow):
         status_bar.addPermanentWidget(self.contacts_num)
 
     def _show_about(self):
-        QMessageBox.about(self, "About", "Contact Engine\n  Version 0.5.2")
-    
+        QMessageBox.about(self, "About", "Contact Engine\n  Version 0.6.0")
+
     def _on_create_new_triggered(self):
         self.form_dock.show()
         self.input_panel.first_name.setFocus()
@@ -97,3 +120,46 @@ class MainWindow(QMainWindow):
 
     def _update_counter(self):
         self.contacts_num.setText(f"Rows: {self.model.rowCount()}")
+
+    
+    def _export_csv(self):
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Export to CSV", "contacts.csv", "CSV (*.csv)")
+        if not path:
+            return
+        if not path.endswith(".csv"):
+            path += ".csv"
+        exporter = Exporter(self.model.contacts)
+        try:
+            exporter.write_to_csv(path)
+            self.statusBar().showMessage(f"Exported {self.model.rowCount()} contacts", 3000)
+        except OSError as e:
+            QMessageBox.warning(self, "Export failed", str(e))
+
+    def _export_json(self):
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Export to JSON", "contacts.json", "JSON (*.json)")
+        if not path:
+            return
+        if not path.endswith(".json"):
+            path += ".json"
+        exporter = Exporter(self.model.contacts)
+        try:
+            exporter.write_to_json(path)
+            self.statusBar().showMessage(f"Exported {self.model.rowCount()} contacts", 3000)
+        except OSError as e:
+            QMessageBox.warning(self, "Export failed", str(e))
+
+    def _export_vcard(self):
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Export to vCard", "contacts.vcf", "vCard (*.vcf)")
+        if not path:
+            return
+        if not path.endswith(".vcf"):
+            path += ".vcf"
+        exporter = Exporter(self.model.contacts)
+        try:
+            exporter.write_to_vcard(path)
+            self.statusBar().showMessage(f"Exported {self.model.rowCount()} contacts", 3000)
+        except OSError as e:
+            QMessageBox.warning(self, "Export failed", str(e))
