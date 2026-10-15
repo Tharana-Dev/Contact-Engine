@@ -20,3 +20,8 @@ env/
 
 #databse file
 contacts.db
+
+#exported files
+*.csv
+*.vcf
+*.json
