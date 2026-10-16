@@ -1,8 +1,8 @@
 from PySide6.QtCore import QRegularExpression
 
 regex_patterns = {
-    "first_name": r"[\p{L}\s'-]*",
-    "last_name": r"[\p{L}\s'-]*",
+    "first_name": r"[\p{L}\p{N}\s'\-()]*",
+    "last_name":  r"[\p{L}\p{N}\s'\-()]*",
     "email": r"[\p{L}\p{N}@._%+\-]*",
     "phone": r"[\d\s+\-().]*",
     "email_on_submit": r"^[\p{L}\p{N}._%+\-]+@[\p{L}\p{N}.\-]+\.[\p{L}]{2,}$",
