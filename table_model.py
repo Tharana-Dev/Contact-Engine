@@ -67,3 +67,21 @@ class ContactModel(QAbstractTableModel):
         self.beginResetModel()
         self.contacts = self.db.search(query)
         self.endResetModel()
+
+    def update_contact(self, row: int, updated_contact: Contact) -> None:
+        """Updates a contact at a specific row, commits it to the database,
+        and notifies the attached views to refresh.
+
+        Propagates all database and validation exceptions up to the caller.
+        """
+        if row < 0 or row >= len(self.contacts):
+            raise IndexError("Target row index out of range for the contact list.")
+
+        self.db.update_contact(updated_contact)
+
+        self.contacts[row] = updated_contact
+
+        #Notify the View interface to redraw the updated row.
+        top_left = self.index(row, 0)
+        bottom_right = self.index(row, len(self.columns) - 1)
+        self.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.DisplayRole])

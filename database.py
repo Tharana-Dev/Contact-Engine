@@ -66,8 +66,7 @@ class Database:
                     VALUES('delete', old.id, old.first_name, old.last_name, old.email);
                 END;
             """)
-#-- Update trigger: no current code path updates contacts, but keeping this
-#-- ensures FTS stays in sync when the edit feature lands (v0.6)
+#-- ensures FTS stays in sync when the existing data is updated
             self._cursor.execute("""
                 CREATE TRIGGER IF NOT EXISTS contacts_after_update 
                 AFTER UPDATE ON contacts BEGIN
@@ -103,7 +102,38 @@ class Database:
             generated_id = self._cursor.lastrowid
 
         return replace(contact, id=generated_id)
-    
+
+    def update_contact(self, contact: Contact) -> Contact:
+        """Updates an existing contact's details in the database.
+        
+        The FTS index automatically updates via the database trigger.
+        """
+        if not self._is_connected():
+            raise sqlite3.ProgrammingError("Cannot execute query: Database is disconnected.")
+        if contact.id is None:
+            raise ValueError("Cannot update a contact that does not have an ID.")
+
+        with self._conn:
+            self._cursor.execute(
+                """
+                UPDATE Contacts 
+                SET first_name = ?, 
+                    last_name = ?, 
+                    phone = ?, 
+                    email = ? 
+                WHERE id = ?
+                """,
+                (
+                    contact.first_name,
+                    contact.last_name,
+                    contact.phone,
+                    contact.email,
+                    contact.id,
+                ),
+            )
+
+        return contact
+
     def fetch_all(self) -> list[Contact]:
         """Reads every row, returns as Contact objects, ordered by id ascending."""
         if not self._is_connected():
