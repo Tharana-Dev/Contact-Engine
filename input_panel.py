@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import QWidget, QLabel, QPushButton, QHBoxLayout, QVBoxLayout, QLineEdit
 from PySide6.QtCore import Signal, Qt, QRegularExpression
 from PySide6.QtGui import QRegularExpressionValidator
-
+from validation import regex_patterns, is_valid_email, is_valid_phone
 import sys
 from PySide6.QtWidgets import QApplication
 
@@ -12,16 +12,6 @@ class InputPanel(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-
-        self.regex_patterns = {
-            "first_name": r"[\p{L}\s'-]*",
-            "last_name": r"[\p{L}\s'-]*",
-            "email": r"[\p{L}\p{N}@._%+\-]*",
-            "phone": r"[\d\s+\-().]*",
-            "email_on_submit": r"^[\p{L}\p{N}._%+\-]+@[\p{L}\p{N}.\-]+\.[\p{L}]{2,}$",
-            "phone_on_submit": r"^[+]?[\d\s\-().]{7,20}$"
-        }
-
         # Main Layout Setup
         self.outer_layout = QVBoxLayout()
         self.setLayout(self.outer_layout)
@@ -55,25 +45,25 @@ class InputPanel(QWidget):
         self.first_name, self.first_name_error = self._create_input_row_with_validator(
             "First Name: ",
             "Enter Your First Name Here",
-            self.regex_patterns.get("first_name", r"[\p{L}\s'\-]*")
+           regex_patterns["first_name"]
         )
 
         self.last_name, self.last_name_error = self._create_input_row_with_validator(
             "Last Name: ",
             "Enter Your Last Name Here",
-            self.regex_patterns.get("last_name", r"[\p{L}\s'\-]*")
+            regex_patterns["last_name"]
         )
 
         self.email, self.email_error = self._create_input_row_with_validator(
             "Email: ",
             "Enter Your Email Here",
-            self.regex_patterns.get('email', r"[\p{L}\p{N}@._%+\-]*")
+           regex_patterns['email']
         )
 
         self.phone, self.phone_error = self._create_input_row_with_validator(
             "Phone: ",
             "Enter Your Contact Number Here",
-            self.regex_patterns.get('phone', r"[\d\s+\-().]*")
+           regex_patterns['phone']
         )
 
         self.first_name.textChanged.connect(
@@ -141,15 +131,8 @@ class InputPanel(QWidget):
         email_text = self.email.text()
         phone_text = self.phone.text()
 
-        email_pattern = self.regex_patterns.get(
-            'email_on_submit', r'^[\p{L}\p{N}._%+\-]+@[\p{L}\p{N}.\-]+\.[\p{L}]{2,}$')
-        email_re = QRegularExpression(email_pattern)
-        email_match = email_re.match(email_text)
-
-        phone_pattern = self.regex_patterns.get(
-            'phone_on_submit', r'^[+]?[\d\s\-().]{7,20}$')
-        phone_re = QRegularExpression(phone_pattern)
-        phone_match = phone_re.match(phone_text)
+        email_match = is_valid_email(email_text)
+        phone_match = is_valid_phone(phone_text)
 
         self._set_error(self.first_name, self.first_name_error, False)
         self._set_error(self.last_name, self.last_name_error, False)
@@ -166,29 +149,22 @@ class InputPanel(QWidget):
             self._set_error(
                 self.last_name, self.last_name_error, True, "Required")
             has_errors = True
-        if not email_match.hasMatch():
+        if not email_match:
             self._set_error(self.email, self.email_error,
                             True, "Invalid email")
             has_errors = True
-        if not phone_match.hasMatch():
+        if not phone_match:
             self._set_error(self.phone, self.phone_error,
                             True, "Invalid phone")
             has_errors = True
 
         if has_errors:
             return
-
-        self._set_error(self.first_name, self.first_name_error, False)
-        self._set_error(self.last_name, self.last_name_error, False)
-        self._set_error(self.email, self.email_error, False)
-        self._set_error(self.phone, self.phone_error, False)
-
+        
         self._clear_fields()
 
         self.contact_added.emit(
             first_name_text, last_name_text, phone_text, email_text)
-
-
 
     def _clear_fields(self):
         self.first_name.clear()
