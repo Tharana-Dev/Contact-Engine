@@ -52,7 +52,7 @@ On first run, a local SQLite database (`contacts.db`) is created automatically i
 
 markdown
 ## Project Structure
-.
+```text
 ├── main.py # entry point: builds app, opens DB, shows window
 ├── main_window.py # QMainWindow: owns model, panels, menus, docks, status
 ├── input_panel.py # form for entering a new contact
@@ -65,7 +65,7 @@ markdown
 ├── exporter.py        # CSV / JSON / vCard writers
 ├── validation.py      # Regex patterns and format checks
 └── style.qss          # application-wide stylesheet
-
+```
 
 
 ---
