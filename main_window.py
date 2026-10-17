@@ -2,10 +2,12 @@ from input_panel import InputPanel
 from list_panel import ContactListPanel
 from table_model import ContactModel
 from database import Database
-from PySide6.QtWidgets import QMainWindow, QDockWidget, QFileDialog, QMessageBox, QLabel
+from PySide6.QtWidgets import QMainWindow, QDockWidget, QFileDialog, QMessageBox, QLabel, QDialog
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction, QKeySequence
 from exporter import Exporter
+from contact_dialog import ContactDialog
+from dataclasses import replace
 
 EXPORT_FORMATS = {
     "csv":   ("Export to CSV",   "contacts.csv",   "CSV (*.csv)",   ".csv",   "write_to_csv"),
@@ -33,6 +35,7 @@ class MainWindow(QMainWindow):
 
         self._wire_signals()
         self.model.modelReset.connect(self._update_counter)
+        self.contact_list.edit_requested.connect(self._edit_contact)
 
     def _build_actions(self):
         self.new_action = QAction("Add New Contact", self)
@@ -143,3 +146,15 @@ class MainWindow(QMainWindow):
                 self.statusBar().showMessage(f"Exported {self.model.rowCount()} contacts", 3000)
             except OSError as e:
                 QMessageBox.warning(self, "Export failed", str(e))
+
+    def _edit_contact(self, row: int):
+        contact = self.model.contacts[row]
+        dialog = ContactDialog(contact, self)
+        
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            first, last, phone, email = dialog.get_data()
+            # Using dataclasses.replace to swap values and create a new frozen Contact
+            updated = replace(contact, first_name=first, last_name=last, phone=phone, email=email)
+            
+            self.model.update_contact(row, updated)
+            self.statusBar().showMessage("Contact updated", 3000)
