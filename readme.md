@@ -71,6 +71,7 @@ markdown
 ---
 
 ## Architecture
+![Architecture Diagram](screenshots/architecture.png)
 
 The app follows a **model / view / controller** split with a clean data layer
 underneath.
