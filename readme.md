@@ -12,11 +12,12 @@ everything persists to a local SQLite database between sessions.
 
 - Add contacts (first name, last name, phone, email)
 - View all contacts in a `QTableView` backed by a custom `QAbstractTableModel`
+- **Edit existing contacts via a dedicated `QDialog`**
 - Multi-select and delete contacts
 - Live search across names and emails (FTS5 inverted index, 200ms debounce)
 - Input validation — Unicode-aware name/email/phone checks with inline error feedback
 - Export to CSV, JSON, or vCard via `QFileDialog`
-- Instant persistence — every insert/delete is committed to SQLite immediately
+- Instant persistence — every insert/update/delete is committed to SQLite immediately
 - WAL mode for concurrent reads
 - Indexed columns for fast exact-match lookups
 - Dockable input form — move it, float it, close it, or toggle from the View menu
@@ -51,21 +52,23 @@ with the schema, indexes, FTS5 virtual table, and triggers applied.
 
 ---
 
+markdown
 ## Project Structure
-
-```
 .
-├── main.py            # entry point: builds app, opens DB, shows window
-├── main_window.py     # QMainWindow: owns model, panels, menus, docks, status
-├── input_panel.py     # form for entering a new contact
-├── list_panel.py      # QTableView + search box + Delete button
-├── table_model.py     # ContactModel — QAbstractTableModel subclass
-├── database.py        # SQLite connection, schema, FTS5, all SQL
-├── contact.py         # Contact dataclass
-├── exporter.py        # CSV / JSON / vCard writers
-├── style.qss          # application-wide stylesheet
-└── contacts.db        # auto-generated SQLite database
-```
+├── main.py # entry point: builds app, opens DB, shows window
+├── main_window.py # QMainWindow: owns model, panels, menus, docks, status
+├── input_panel.py # form for entering a new contact
+├── contact_dialog.py # QDialog for editing an existing contact
+├── validation.py # shared regex patterns and format checkers
+├── list_panel.py # QTableView + search box + Update/Delete buttons
+├── table_model.py # ContactModel — QAbstractTableModel subclass
+├── database.py # SQLite connection, schema, FTS5, all SQL
+├── contact.py # Contact dataclass
+├── exporter.py # CSV / JSON / vCard writers
+├── style.qss # application-wide stylesheet
+└── contacts.db # auto-generated SQLite database
+
+
 
 ---
 
@@ -109,6 +112,24 @@ No Qt. No display. Just SQL and `Contact` objects.
   removes go through the database first, then update the in-memory list with
   proper `beginInsertRows` / `endInsertRows` / `beginRemoveRows` /
   `endRemoveRows` signals so the view redraws correctly.
+
+  ### `validation.py` — shared input rules
+
+Pure functions and regex patterns used by both the Add form and the Edit dialog.
+- `regex_patterns` — a dictionary of the character-level masks (e.g., allowing only digits and dashes in phone fields).
+- `is_valid_email(text) -> bool` / `is_valid_phone(text) -> bool` — format checks run on submit to catch structural errors that character masks cannot (like missing an `@`).
+
+Keeping these in one place prevents duplication between the dock panel and the dialog.
+
+### `contact_dialog.py` — the edit dialog
+
+A `QDialog` subclass designed for a single, focused task: editing one contact.
+- Takes a `Contact` object on construction and pre-fills its fields.
+- Uses the shared `validation.py` rules before allowing the dialog to close.
+- Has two buttons: **Update** (calls `self.accept()`) and **Cancel** (calls `self.reject()`).
+- Exposes `get_data()` so `MainWindow` can retrieve the four edited strings after the dialog closes.
+
+Unlike the persistent dock panel, this dialog is transient — it blocks the main window until the user finishes or cancels.
 
 Public mutation methods:
 
@@ -240,6 +261,18 @@ User picks File → Export → CSV / JSON / vCard
   → If extension missing: append it
   → Exporter(contacts).write_to_<format>(path)
   → status bar confirms, or QMessageBox on OSError
+
+User selects a row and clicks Update
+  → ContactListPanel emits edit_requested(row)
+  → MainWindow._edit_contact receives it
+  → ContactDialog opens, pre-filled with the contact's data
+  → User edits and clicks Update (validates internally)
+  → MainWindow retrieves the new data via dialog.get_data()
+  → ContactModel.update_contact(row, updated_contact)
+      → Database.update_contact(...)       (UPDATE ... WHERE id = ?)
+      → FTS5 sync trigger fires automatically
+      → dataChanged signal emitted
+  → table redraws, status message shows
 ```
 
 **Why descending order for deletes?** Deleting row 1 first shifts row 5 down to
@@ -307,8 +340,6 @@ The architecture is designed so features can be **added**, not **restructured**:
 - **Streamed export for large datasets** — replace the JSON writer's
   build-then-write with a generator pipeline.
 
-None of these require changing the model/view/controller boundaries.
-
 ---
 
 ## Versions
@@ -324,14 +355,15 @@ None of these require changing the model/view/controller boundaries.
 | `v0.5.1` | Input validation — regex validators, inline error feedback |
 | `v0.5.2` | Cleanup pass — no new features, code and QSS tidy |
 | `v0.6` | Export engine — CSV, JSON, and vCard with file dialog |
+| `v0.6.1` | Refactor — unified export handlers |
+| `v0.7` | Edit existing contacts via dialog, shared validation module |
 
 ---
 
 ## Known Limitations
 
-- No sort or inline edit yet (planned for later versions)
+- No inline cell editing yet (editing happens via a dialog)
 - Single database file for all contacts (no multi-address-book support)
 - Window layout is not remembered between sessions (dock position resets to top)
 - No visual empty-state ("No contacts yet") — the table is simply blank
-- Export loads the full contact list into memory; fine up to ~100k rows,
-  would need streaming past that
+- Export loads the full contact list into memory; fine up to ~100k rows, would need streaming past that
