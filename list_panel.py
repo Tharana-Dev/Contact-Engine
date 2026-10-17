@@ -1,9 +1,10 @@
-from PySide6.QtWidgets import QWidget, QLineEdit, QVBoxLayout, QLabel, QPushButton, QTableView, QMessageBox, QAbstractItemView, QHeaderView
+from PySide6.QtWidgets import QWidget, QLineEdit, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QTableView, QMessageBox, QAbstractItemView, QHeaderView
 from PySide6.QtCore import Signal, Qt, QTimer
 
 
 class ContactListPanel(QWidget):
     delete_requested = Signal(list)
+    edit_requested = Signal(int) 
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -54,12 +55,22 @@ class ContactListPanel(QWidget):
         self.outer_layout.addWidget(self.table)
 
     def _setup_buttons(self):
+        button_row = QHBoxLayout()
+        self.update_btn = QPushButton("Update")
+        self.update_btn.setObjectName("updateBtn") # We'll style this later
+        self.update_btn.setEnabled(False)  
+
         self.delete_btn = QPushButton("Delete")
         self.delete_btn.setObjectName("deleteBtn")
-        self.outer_layout.addWidget(self.delete_btn)
+
+        button_row.addWidget(self.update_btn)
+        button_row.addWidget(self.delete_btn)
+
+        self.outer_layout.addLayout(button_row)
 
         # Signal connection
         self.delete_btn.clicked.connect(self._on_delete_clicked)
+        self.update_btn.clicked.connect(self._on_update_clicked)
 
     def _on_delete_clicked(self):
         rows = [idx.row()
@@ -74,6 +85,11 @@ class ContactListPanel(QWidget):
     def set_model(self, model) -> None:
         self.model = model
         self.table.setModel(model)
+        self.table.selectionModel().selectionChanged.connect(self._on_selection_changed)
+
+    def _on_selection_changed(self, selected,deselected):
+        rows = self.table.selectionModel().selectedRows()
+        self.update_btn.setEnabled(len(rows) == 1)
 
     def _on_search_timeout(self):
         if self.model is None:
@@ -81,3 +97,11 @@ class ContactListPanel(QWidget):
 
         text = self.search_bar.text()
         self.model.search(text)
+
+    def _on_update_clicked(self):
+        # The button is only enabled when exactly 1 row is selected,
+        # but defensive check is always good.
+        rows = self.table.selectionModel().selectedRows()
+        if len(rows) == 1:
+            row_index = rows[0].row()
+            self.edit_requested.emit(row_index)
