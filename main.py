@@ -3,12 +3,23 @@ from pathlib import Path
 
 from database import Database
 from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import QStandardPaths
 from main_window import MainWindow
 
 def main():
     app = QApplication(sys.argv)
+
+    app.setApplicationName("ContactEngine")
+    app.setOrganizationName("TharanaDev")
+
     app.setStyleSheet(Path("style.qss").read_text())
-    database = Database()
+
+    data_dir = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.AppDataLocation)
+    Path(data_dir).mkdir(parents=True, exist_ok=True)
+    db_path = Path(data_dir) / "contacts.db"
+
+    database = Database(db_path=str(db_path))
+    
     window = MainWindow(database)
     window.show()
     app.aboutToQuit.connect(database.close)
