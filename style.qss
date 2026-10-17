@@ -121,6 +121,30 @@ QLineEdit#searchBar::placeholder {
 }
 
 /* ============================================================ */
+/*  Edit Contact                                               */
+/* ============================================================ */
+
+QDialog {
+    background-color: #1e1e1e; /* or whatever your main dark theme bg is */
+}
+
+QPushButton#updateBtn {
+    min-height: 36px;
+    font-size: 16px;
+    background-color: #0078D4;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 16px;
+}
+QPushButton#updateBtn:hover {
+    background-color: #106EBE;
+}
+QPushButton#updateBtn:pressed {
+    background-color: #005A9E;
+}
+
+/* ============================================================ */
 /*  Status Bar                                                   */
 /* ============================================================ */
 QLabel#counterLabel {
