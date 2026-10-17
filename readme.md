@@ -23,7 +23,7 @@ everything persists to a local SQLite database between sessions.
 - Dockable input form — move it, float it, close it, or toggle from the View menu
 - Menu bar with keyboard shortcuts (`Ctrl+N`, `Ctrl+Q`)
 - Status bar with live row counter and action feedback
-
+- Standard OS data paths (AppData) to prevent accidental database deletion
 ---
 
 ## Requirements
@@ -47,9 +47,7 @@ cd Contact-Engine
 python main.py
 ```
 
-On first run, `contacts.db` is created automatically in the working directory
-with the schema, indexes, FTS5 virtual table, and triggers applied.
-
+On first run, a local SQLite database (`contacts.db`) is created automatically in the OS-standard application data directory (e.g., `%APPDATA%\TharanaDev\ContactEngine` on Windows, `~/.local/share/TharanaDev/ContactEngine` on Linux). This prevents accidental deletion and ensures data persists across app updates.
 ---
 
 markdown
@@ -64,9 +62,9 @@ markdown
 ├── table_model.py # ContactModel — QAbstractTableModel subclass
 ├── database.py # SQLite connection, schema, FTS5, all SQL
 ├── contact.py # Contact dataclass
-├── exporter.py # CSV / JSON / vCard writers
-├── style.qss # application-wide stylesheet
-└── contacts.db # auto-generated SQLite database
+├── exporter.py        # CSV / JSON / vCard writers
+├── validation.py      # Regex patterns and format checks
+└── style.qss          # application-wide stylesheet
 
 
 
@@ -284,9 +282,7 @@ row 4. Iterating in reverse prevents deleting the wrong contact.
 
 SQLite, not JSON.
 
-- **On startup:** `Database.__init__` opens `contacts.db`, enables WAL mode,
-  applies `synchronous=NORMAL`, and creates the schema, indexes, FTS5 virtual
-  table, and sync triggers if missing. Idempotent — safe to run every launch.
+- **On startup:** `main.py` uses `QStandardPaths` to locate the OS-specific app data directory, then opens `contacts.db` there. `Database.__init__` enables WAL mode, applies `synchronous=NORMAL`, and creates the table and indexes if missing. Idempotent — safe to run every launch.
 - **On every mutation:** `ContactModel` calls `Database.insert_contact` or
   `Database.delete_contacts`, each wrapped in a transaction. The data hits disk
   immediately. A crash loses nothing.
@@ -357,7 +353,7 @@ The architecture is designed so features can be **added**, not **restructured**:
 | `v0.6` | Export engine — CSV, JSON, and vCard with file dialog |
 | `v0.6.1` | Refactor — unified export handlers |
 | `v0.7` | Edit existing contacts via dialog, shared validation module |
-
+| `v0.7.1` | Database moved to OS-standard AppData directory |
 ---
 
 ## Known Limitations
