@@ -69,9 +69,38 @@ markdown
 
 
 ---
+## Architecture Overview
 
-## Architecture
+Contact Engine is a PySide6 desktop contact manager following a Model-View-Controller (MVC) design pattern. The main workflow validates an added or edited contact, routes it through the main window controller and custom table model, and persists it immediately into an SQLite database. The table view supports debounced search and multi-select deletion, while the controller can invoke export routines to output contacts into CSV, JSON, or vCard formats.
+
 ![Architecture Diagram](screenshots/architecture.png)
+
+### System Connections & Tracing Evidence
+
+The graph below reflects README-documented capabilities and sampled source files. Edges are strictly limited to relationships visible in the source code or explicitly documented interactions.
+
+| Source Component | Target Component | Action / Relationship | Evidence Base |
+| :--- | :--- | :--- | :--- |
+| **User** | App startup | Launches application | `README.md` |
+| **App startup** | SQLite database | Opens database connection | `main.py` |
+| **App startup** | Window controller | Instantiates controller | `main.py` |
+| **App startup** | SQLite database | Closes connection cleanly on exit | `main.py` |
+| **User** | InputPanel (Add form) | Enters new contact details | `README.md` |
+| **InputPanel** | Input validation | Validates formats on submission | `validation.py` |
+| **ContactDialog** | Input validation | Validates modified fields on update | `validation.py` |
+| **InputPanel** | Window controller | Emits `contact_added` signal | `input_panel.py` / `main_window.py` |
+| **User** | Window controller | Triggers menu actions / shortcuts | `README.md` |
+| **Window controller**| Table model | Appends or removes rows | `main_window.py` |
+| **Window controller**| ContactDialog | Instantiates and opens edit dialog | `main_window.py` |
+| **ContactDialog** | Window controller | Returns confirmed updates via `get_data()`| `main_window.py` |
+| **Window controller**| Table model | Updates existing contact entry | `main_window.py` |
+| **ListPanel** | Table model | Dispatches debounced FTS5 search | `list_panel.py` |
+| **ListPanel** | Window controller | Emits mutation requests (delete/edit) | `main_window.py` |
+| **ListPanel** | Table model | Displays core dataset via view binding | `README.md` |
+| **Table model** | SQLite database | Performs atomic reads and writes | `table_model.py` |
+| **SQLite database** | Contact record | Materializes row data into object records| `database.py` |
+| **Window controller**| Export writers | Hands off dataset to export pipeline | `main_window.py` |
+| **Export writers** | Contact record | Reads fields sequentially to stream files | `exporter.py` |
 
 The app follows a **model / view / controller** split with a clean data layer
 underneath.
