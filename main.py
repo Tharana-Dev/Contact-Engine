@@ -4,6 +4,7 @@ from pathlib import Path
 from database import Database
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QStandardPaths
+from PySide6.QtGui import QIcon
 from main_window import MainWindow
 
 def main():
@@ -11,6 +12,8 @@ def main():
 
     app.setApplicationName("ContactEngine")
     app.setOrganizationName("TharanaDev")
+
+    app.setWindowIcon(QIcon("book.ico"))
 
     app.setStyleSheet(Path("style.qss").read_text())
 
