@@ -388,6 +388,7 @@ The architecture is designed so features can be **added**, not **restructured**:
 | `v0.7.1` | Database moved to OS-standard AppData directory |
 | `v0.7.2` | Window layout persistence, visual empty state |
 | `v0.7.3` | UI Polish: custom app icon, fixed-size message boxes, dark theme dialogs. |
+| v0.7.4 | UI Polish: integrated premium Spruce & Mint sub-theme, resolved QDialog field overlapping, updated README screenshots. |
 ---
 
 ## Known Limitations
