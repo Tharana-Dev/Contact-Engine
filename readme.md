@@ -24,6 +24,8 @@ everything persists to a local SQLite database between sessions.
 - Menu bar with keyboard shortcuts (`Ctrl+N`, `Ctrl+Q`)
 - Status bar with live row counter and action feedback
 - Standard OS data paths (AppData) to prevent accidental database deletion
+- Window layout and dock positions are remembered between sessions
+- Visual empty state when no contacts are present
 ---
 
 ## Requirements
@@ -384,12 +386,11 @@ The architecture is designed so features can be **added**, not **restructured**:
 | `v0.6.1` | Refactor — unified export handlers |
 | `v0.7` | Edit existing contacts via dialog, shared validation module |
 | `v0.7.1` | Database moved to OS-standard AppData directory |
+| `v0.7.2` | Window layout persistence, visual empty state |
 ---
 
 ## Known Limitations
 
-- No inline cell editing yet (editing happens via a dialog)
+- No column sorting yet (planned for Phase 2)
 - Single database file for all contacts (no multi-address-book support)
-- Window layout is not remembered between sessions (dock position resets to top)
-- No visual empty-state ("No contacts yet") — the table is simply blank
-- Export loads the full contact list into memory; fine up to ~100k rows, would need streaming past that
+- Export loads the full contact list into memory (fine for desktop scale; streaming needed for 500k+ rows)
