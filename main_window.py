@@ -3,7 +3,7 @@ from list_panel import ContactListPanel
 from table_model import ContactModel
 from database import Database
 from PySide6.QtWidgets import QMainWindow, QDockWidget, QFileDialog, QMessageBox, QLabel, QDialog
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QSettings
 from PySide6.QtGui import QAction, QKeySequence
 from exporter import Exporter
 from contact_dialog import ContactDialog
@@ -26,8 +26,19 @@ class MainWindow(QMainWindow):
         self.contacts_num = QLabel(f"Rows: {self.model.rowCount()}")
         self.contacts_num.setObjectName("counterLabel")
 
+        self.settings = QSettings("TharanaDev", "ContactEngine")
+
         self._build_actions()
         self._init_ui()
+
+        geometry = self.settings.value("geometry")
+        window_state = self.settings.value("windowState")
+
+        if geometry is not None:
+            self.restoreGeometry(geometry)
+        if window_state is not None:
+            self.restoreState(window_state)
+
         self._build_dock()
         self._build_menu_bar()
         self._build_status_bar()
@@ -158,3 +169,9 @@ class MainWindow(QMainWindow):
             
             self.model.update_contact(row, updated)
             self.statusBar().showMessage("Contact updated", 3000)
+
+    def closeEvent(self, event): 
+        #saves the stats
+        self.settings.setValue("geometry", self.saveGeometry())
+        self.settings.setValue("windowState", self.saveState())
+        super().closeEvent(event)
