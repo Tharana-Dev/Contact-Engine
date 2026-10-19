@@ -88,8 +88,11 @@ class ContactListPanel(QWidget):
         rows = [idx.row()
                 for idx in self.table.selectionModel().selectedRows()]
         if not rows:
-            QMessageBox.warning(self, "Nothing selected",
-                                "Pick a contact first.")
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Icon.Warning)
+            msg.setWindowTitle("Nothing selected")
+            msg.setText("Pick a contact first.")
+            msg.exec()
             return
 
         self.delete_requested.emit(rows)

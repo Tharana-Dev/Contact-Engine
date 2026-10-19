@@ -122,7 +122,11 @@ class MainWindow(QMainWindow):
         status_bar.addPermanentWidget(self.contacts_num)
 
     def _show_about(self):
-        QMessageBox.about(self, "About", "Contact Engine\n  Version 0.6.0")
+        msg = QMessageBox(self)
+        msg.setIcon(QMessageBox.Icon.Information)
+        msg.setWindowTitle("Contact Engine")
+        msg.setText("Version 0.7.3") 
+        msg.exec()
 
     def _on_create_new_triggered(self):
         self.form_dock.show()
@@ -156,7 +160,11 @@ class MainWindow(QMainWindow):
                 getattr(exporter, export_format[4])(path)
                 self.statusBar().showMessage(f"Exported {self.model.rowCount()} contacts", 3000)
             except OSError as e:
-                QMessageBox.warning(self, "Export failed", str(e))
+                msg = QMessageBox(self)
+                msg.setIcon(QMessageBox.Icon.Warning)
+                msg.setWindowTitle("Export failed")
+                msg.setText(str(e))
+                msg.exec()
 
     def _edit_contact(self, row: int):
         contact = self.model.contacts[row]
