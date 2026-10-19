@@ -387,6 +387,7 @@ The architecture is designed so features can be **added**, not **restructured**:
 | `v0.7` | Edit existing contacts via dialog, shared validation module |
 | `v0.7.1` | Database moved to OS-standard AppData directory |
 | `v0.7.2` | Window layout persistence, visual empty state |
+| `v0.7.3` | UI Polish: custom app icon, fixed-size message boxes, dark theme dialogs. |
 ---
 
 ## Known Limitations
