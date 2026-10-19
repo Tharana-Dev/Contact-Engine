@@ -223,152 +223,160 @@ characters survive the round trip. CSV uses the csv module for escaping;
 JSON streams one element at a time with manual bracket/comma handling; vCard
 writes one BEGIN:VCARD / END:VCARD block per contact.
 
-main_window.py — the controller
+### `main_window.py` — the controller
 
-Owns the Database, the ContactModel, both panels, the menu bar, the status
-bar, the dock, and the export handlers. Its job is to wire everything:
-• InputPanel.contact_added → model.add_contact(...) → update counter → status message.
-• ContactListPanel.delete_requested → model.remove_contacts(rows) → update counter → status message.
-• Export actions → QFileDialog.getSaveFileName → Exporter → status message.
-No refresh calls. The model emits the right signals and Qt redraws only what
-changed.
+Owns the `Database`, the `ContactModel`, both panels, the menu bar, the status bar, the dock, and the export handlers. Its job is to wire everything:
 
-main.py — the process
+* `InputPanel.contact_added` → `model.add_contact(...)` → update counter → status message.
+* `ContactListPanel.delete_requested` → `model.remove_contacts(rows)` → update counter → status message.
+* Export actions → `QFileDialog.getSaveFileName` → `Exporter` → status message.
 
-Opens the Database, passes it to MainWindow, wires db.close to
-app.aboutToQuit. Knows nothing about widgets.
+No refresh calls. The model emits the right signals and Qt redraws only what changed.
 
-Layout
+### `main.py` — the process
 
-The window uses QMainWindow slots:
-• Central widget — the contact table (always visible)
-• Top dock — the input form (QDockWidget wrapping InputPanel)
-• Menu bar — File (New Contact, Export → CSV/JSON/vCard, Exit) / View
-(toggle input form) / Help (About)
-• Status bar — permanent row counter on the right, transient feedback
-messages on the left
-The input dock is user-rearrangeable — drag it to any edge or float it as a
-separate window.
+Opens the `Database`, passes it to `MainWindow`, wires `db.close` to `app.aboutToQuit`. Knows nothing about widgets.
 
-Data Flow
+---
 
-User clicks Add
-  → InputPanel validates, emits contact_added(first, last, phone, email)
-  → MainWindow._add_contact receives it
-  → ContactModel.add_contact(...)
-      → Database.insert_contact(...)       (INSERT, returns Contact with id)
-      → beginInsertRows / append / endInsertRows
-  → counter label updates, status message shows
+## Layout
 
-User selects rows and clicks Delete
-  → ContactListPanel emits delete_requested([rows])
-  → MainWindow._delete_contact receives it
-  → ContactModel.remove_contacts(rows)
-      → translate rows → ids
-      → Database.delete_contacts(ids)      (single DELETE ... WHERE id IN (...))
-      → for each row in descending order:
-          beginRemoveRows / del / endRemoveRows
-  → counter label updates, status message shows
+The window uses `QMainWindow` slots:
 
-User types in the search box
-  → 200ms debounce timer restarts on each keystroke
-  → On timer timeout: ContactModel.search(text)
-      → Database.search(text)              (FTS5 MATCH, prefix-expanded, sanitized)
-      → beginResetModel / replace contacts / endResetModel
-  → table redraws with matching rows, counter updates
+* **Central widget** — the contact table (always visible)
+* **Top dock** — the input form (`QDockWidget` wrapping `InputPanel`)
+* **Menu bar** — File (New Contact, Export → CSV/JSON/vCard, Exit) / View (toggle input form) / Help (About)
+* **Status bar** — permanent row counter on the right, transient feedback messages on the left
 
-User picks File → Export → CSV / JSON / vCard
-  → QFileDialog.getSaveFileName shows picker
-  → If cancelled: return
-  → If extension missing: append it
-  → Exporter(contacts).write_to_<format>(path)
-  → status bar confirms, or QMessageBox on OSError
+The input dock is user-rearrangeable — drag it to any edge or float it as a separate window.
 
-User selects a row and clicks Update
-  → ContactListPanel emits edit_requested(row)
-  → MainWindow._edit_contact receives it
-  → ContactDialog opens, pre-filled with the contact's data
-  → User edits and clicks Update (validates internally)
-  → MainWindow retrieves the new data via dialog.get_data()
-  → ContactModel.update_contact(row, updated_contact)
-      → Database.update_contact(...)       (UPDATE ... WHERE id = ?)
-      → FTS5 sync trigger fires automatically
-      → dataChanged signal emitted
-  → table redraws, status message shows
-Why descending order for deletes? Deleting row 1 first shifts row 5 down to
-row 4. Iterating in reverse prevents deleting the wrong contact.
+---
 
-Persistence
+## Data Flow
+
+### User clicks Add
+1. `InputPanel` validates formats, then emits `contact_added(first, last, phone, email)`.
+2. `MainWindow._add_contact` receives the signal data.
+3. `ContactModel.add_contact(...)` is called:
+   * Triggers `Database.insert_contact(...)` (Executes SQL `INSERT`, returns `Contact` record with its new ID).
+   * Calls `beginInsertRows`, appends the record to the in-memory array, and calls `endInsertRows`.
+4. The live counter label updates and the status bar displays feedback.
+
+### User selects rows and clicks Delete
+1. `ContactListPanel` emits `delete_requested([rows])` with selected indices.
+2. `MainWindow._delete_contact` catches the request.
+3. `ContactModel.remove_contacts(rows)` handles processing:
+   * Translates the interface view row indices into unique primary database IDs.
+   * Dispatches `Database.delete_contacts(ids)` (Runs a single atomic `DELETE ... WHERE id IN (...)` statement).
+   * Iterates through the collection in **descending order** using `beginRemoveRows` / `del` / `endRemoveRows`.
+4. The active window counter label updates and a confirmation shows on screen.
+
+### User types in the search box
+1. A `200ms` debounce single-shot `QTimer` restarts tracking on every individual keystroke.
+2. On timer timeout, it triggers `ContactModel.search(text)`:
+   * Calls `Database.search(text)` (Runs prefix-expanded, sanitized FTS5 `MATCH` queries).
+   * Fires `beginResetModel`, swaps out the in-memory array data, and closes with `endResetModel`.
+3. The UI table automatically redraws with matching entries and the count total adjusts.
+
+### User picks File → Export → CSV / JSON / vCard
+1. Shows the save destination prompt via `QFileDialog.getSaveFileName`.
+2. If the user cancels the modal window, the routine safely exits early.
+3. Automatically appends the matching file extension if it is missing from the target name.
+4. Executes `Exporter(contacts).write_to_<format>(path)`.
+5. The status bar confirms success or surfaces a `QMessageBox` error upon catching an `OSError`.
+
+### User selects a row and clicks Update
+1. `ContactListPanel` handles the interaction and emits `edit_requested(row)`.
+2. `MainWindow._edit_contact` opens a transient `ContactDialog` populated with the current entry details.
+3. The user modifies text inputs; the modal carries out internal regex validation checks upon hitting save.
+4. `MainWindow` safely captures the modified strings via `dialog.get_data()`.
+5. `ContactModel.update_contact(row, updated_contact)` executes internal data tasks:
+   * Updates the records on disk via `Database.update_contact(...)`.
+   * The SQLite FTS5 database sync trigger fires automatically to maintain search parity.
+   * Dispatches a `dataChanged` layout update signal.
+6. The data table redraws changes and flashes tracking status updates.
+
+> **Why descending order for deletes?** Deleting row 1 first would dynamically shift row 5 down into index position 4. Processing collections in reverse prevents index mismatch errors.
+
+---
+
+## Persistence
 
 SQLite, not JSON.
-• On startup: main.py uses QStandardPaths to locate the OS-specific app data directory, then opens contacts.db there. Database.__init__ enables WAL mode, applies synchronous=NORMAL, and creates the table and indexes if missing. Idempotent — safe to run every launch.
-• On every mutation: ContactModel calls Database.insert_contact or
-Database.delete_contacts, each wrapped in a transaction. The data hits disk
-immediately. A crash loses nothing.
-• On quit: db.close() on aboutToQuit releases the connection cleanly.
+
+* **On startup:** `main.py` uses `QStandardPaths` to locate the OS-specific application data directory, then opens `contacts.db` there. `Database.__init__` enables WAL mode, applies `synchronous=NORMAL`, and creates the table and indexes if missing. Idempotent — safe to run every launch.
+* **On every mutation:** `ContactModel` calls `Database.insert_contact` or `Database.delete_contacts`, each wrapped in a transaction. The data hits disk immediately. A crash loses nothing.
+* **On quit:** `db.close()` on `aboutToQuit` releases the connection cleanly.
+
 The main schema:
+
 ```sql
 CREATE TABLE Contacts (
-id          INTEGER PRIMARY KEY,
-first_name  TEXT,
-last_name   TEXT,
-phone       TEXT,
-email       TEXT
+    id          INTEGER PRIMARY KEY,
+    first_name  TEXT,
+    last_name   TEXT,
+    phone       TEXT,
+    email       TEXT
 );
+
 CREATE INDEX idx_contacts_first_name ON Contacts(first_name);
 CREATE INDEX idx_contacts_last_name  ON Contacts(last_name);
 CREATE INDEX idx_contacts_email      ON Contacts(email);
 ```
-A parallel FTS5 virtual table (contacts_fts) indexes first_name,
-last_name, and email in external-content mode, kept in sync by three
-triggers. search() queries it with MATCH.
-WAL mode enables concurrent reads while a write is in progress — relevant once
+
+A parallel FTS5 virtual table (`contacts_fts`) indexes `first_name`, `last_name`, and `email` in external-content mode, kept in sync by three triggers. `search()` queries it with `MATCH`.
+
+WAL mode enables concurrent reads while a write is in progress.
+
 background sync lands in a later version.
 
-Keyboard Shortcuts
+---
 
+## Keyboard Shortcuts
 
-Shortcut	Action
-Ctrl+N	Show the input dock and focus the first field
-Ctrl+Q	Quit
+| Shortcut | Action |
+| :--- | :--- |
+| `Ctrl+N` | Show the input dock and focus the first field |
+| `Ctrl+Q` | Quit |
 
+---
 
-Extending
+## Extending
 
-The architecture is designed so features can be added, not restructured:
-• Click a row to edit — read selectionModel().selectedRows() in the
-panel, emit an edit_requested(Contact), populate the form.
-• Confirm before delete — wrap the delete handler in a QMessageBox.question.
-• Import from CSV / vCard — a QFileDialog.getOpenFileName, a parser that
-yields Contact objects, then model.add_contact in a loop.
-• Sort by column — implement sort() on the model, or wrap it in a
-QSortFilterProxyModel.
-• Streamed export for large datasets — replace the JSON writer's
-build-then-write with a generator pipeline.
+The architecture is designed so features can be **added**, not **restructured**:
 
-Versions
+* **Click a row to edit** – read `selectionModel().selectedRows()` in the panel, emit an `edit_requested(Contact)`, populate the form.
+* **Confirm before delete** – wrap the delete handler in a `QMessageBox.question`.
+* **Import from CSV / vCard** – a `QFileDialog.getOpenFileName`, a parser that yields `Contact` objects, then `model.add_contact` in a loop.
+* **Sort by column** – implement `sort()` on the model, or wrap it in a `QSortFilterProxyModel`.
+* **Streamed export for large datasets** – replace the JSON writer's build-then-write with a generator pipeline.
 
+---
 
-Tag	Highlights
-v0.1	Initial release — tabs layout, save on close, JSON persistence
-v0.2	Dock-based layout, menu bar, status bar, save on mutation
-v0.3	Code structure cleanup and color palette
-v0.4	SQLite persistence, QAbstractTableModel, QTableView, WAL mode
-v0.4.1	Table styling pass, form layout fixes
-v0.5	FTS5-backed search with debounce, live filtering
-v0.5.1	Input validation — regex validators, inline error feedback
-v0.5.2	Cleanup pass — no new features, code and QSS tidy
-v0.6	Export engine — CSV, JSON, and vCard with file dialog
-v0.6.1	Refactor — unified export handlers
-v0.7	Edit existing contacts via dialog, shared validation module
-v0.7.1	Database moved to OS-standard AppData directory
-v0.7.2	Window layout persistence, visual empty state
-v0.7.3	UI Polish: custom app icon, fixed-size message boxes, dark theme dialogs.
-v0.7.4	UI Polish: integrated premium Spruce & Mint sub-theme, resolved QDialog field overlapping, updated README screenshots.
+## Versions
 
+| Tag | Highlights |
+| :--- | :--- |
+| `v0.1` | Initial release — tabs layout, save on close, JSON persistence |
+| `v0.2` | Dock-based layout, menu bar, status bar, save on mutation |
+| `v0.3` | Code structure cleanup and color palette |
+| `v0.4` | SQLite persistence, `QAbstractTableModel`, `QTableView`, WAL mode |
+| `v0.4.1` | Table styling pass, form layout fixes |
+| `v0.5` | FTS5-backed search with debounce, live filtering |
+| `v0.5.1` | Input validation — regex validators, inline error feedback |
+| `v0.5.2` | Cleanup pass — no new features, code and QSS tidy |
+| `v0.6` | Export engine — CSV, JSON, and vCard with file dialog |
+| `v0.6.1` | Refactor — unified export handlers |
+| `v0.7` | Edit existing contacts via dialog, shared validation module |
+| `v0.7.1` | Database moved to OS-standard AppData directory |
+| `v0.7.2` | Window layout persistence, visual empty state |
+| `v0.7.3` | UI Polish: custom app icon, fixed-size message boxes, dark theme dialogs. |
+| `v0.7.4` | UI Polish: integrated premium Spruce & Mint sub-theme, resolved QDialog field overlapping, updated README screenshots. |
 
-Known Limitations
+---
 
-• No column sorting yet (planned for Phase 2)
-• Single database file for all contacts (no multi-address-book support)
-• Export loads the full contact list into memory (fine for desktop scale; streaming needed for 500k+ rows)
+## Known Limitations
+
+* No column sorting yet (planned for Phase 2)
+* Single database file for all contacts (no multi-address-book support)
+* Export loads the full contact list into memory (fine for desktop scale; streaming needed for 500k+ rows)
