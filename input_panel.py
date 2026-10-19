@@ -123,7 +123,7 @@ class InputPanel(QWidget):
 
         # Signal connections
         self.add_btn.clicked.connect(self._on_add_clicked)
-        self.reset_btn.clicked.connect(self._clear_fields)
+        self.reset_btn.clicked.connect(self._on_reset_clicked)
 
     def _on_add_clicked(self):
         first_name_text = self.first_name.text()
@@ -182,6 +182,15 @@ class InputPanel(QWidget):
             label.setVisible(True)
         else:
             label.setVisible(False)
+
+    def _on_reset_clicked(self):
+        self._clear_fields()
+        
+        # these lines to clear out error states explicitly!
+        self._set_error(self.first_name, self.first_name_error, False)
+        self._set_error(self.last_name, self.last_name_error, False)
+        self._set_error(self.email, self.email_error, False)
+        self._set_error(self.phone, self.phone_error, False)
 
 
 if __name__ == "__main__":
