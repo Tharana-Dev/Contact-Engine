@@ -1,12 +1,11 @@
-Here is your complete, updated README.md file content with the v0.7.4 release row seamlessly formatted and integrated into the historic version tracking matrix exactly as specified:
-markdown
 # Contact Engine
 
 A small desktop contact manager built with **PySide6 (Qt for Python)**.
 Add contacts through a form, view them in a table, delete them — and
 everything persists to a local SQLite database between sessions.
 
-![Main window](screenshots/screenshot1.png)
+![Main window](screenshots/Screenshot1.png)
+
 
 ---
 
