@@ -4,7 +4,7 @@ A small desktop contact manager built with **PySide6 (Qt for Python)**.
 Add contacts through a form, view them in a table, delete them — and
 everything persists to a local SQLite database between sessions.
 
-![Main window](screenshots/main_new.png)
+![Main window](screenshots/screenshot1.png)
 
 ---
 

@@ -1,165 +1,355 @@
 /* ============================================================ */
-/*  Global                                                       */
+/*  1. Premium Deep Spruce Canvas & Top Menu Bars              */
 /* ============================================================ */
+QWidget {
+    background-color: #0d1316; /* Deep, rich forest spruce canvas */
+    color: #e6edf2;            /* Clean crisp alabaster typography */
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+}
+
+QMainWindow, QDialog, QDockWidget {
+    background-color: #0d1316;
+}
+
+QMenuBar {
+    background-color: #141c21;
+    border-bottom: 1px solid #202b33;
+}
+
+QMenuBar::item {
+    background: transparent;
+    padding: 6px 14px;
+    color: #8fa0a8;
+    font-weight: 600;
+}
+
+QMenuBar::item:selected {
+    background-color: #202b33;
+    color: #4df0b0;            /* Crisp luminous mint highlighted menu choice */
+    border-radius: 4px;
+}
+
+QMenu {
+    background-color: #141c21;
+    border: 1px solid #202b33;
+    padding: 6px;
+}
+
+QMenu::item:selected {
+    background-color: #4df0b0;
+    color: #0d1316;
+    border-radius: 4px;
+}
 
 /* ============================================================ */
-/*  Data Form                                                   */
+/*  2. Luminous Glass Container Input Fields                    */
+/* ============================================================ */
+QLineEdit {
+    background-color: #141c21; /* Sub-surface container dark fill */
+    border: 1px solid #24333d;  
+    border-radius: 6px;        /* Clean, professional geometry */
+    padding: 10px 14px;         
+    min-height: 40px;          
+    color: #ffffff;            
+    placeholder-text-color: #556c78; 
+}
+
+/* Multi-property transition simulation on active text entry */
+QLineEdit:focus {
+    border: 2px solid #4df0b0; /* Luminous mint active layout boundary */
+    background-color: #1a252c; 
+    color: #ffffff;
+}
+
+/* ============================================================ */
+/*  3. High-Contrast Typography & Vivid Safety Alerts          */
 /* ============================================================ */
 QLabel#topic {
-    font-size: 24px;
-    font-weight: bold;
-    color: #0078D4;
-        }
+    font-size: 22px;           
+    font-weight: 800;
+    color: #4df0b0;            /* Luminous mint primary form title */
+    letter-spacing: 1px;
+    background: transparent;
+    padding-bottom: 4px;
+}
 
 QLabel#fieldLabel {
-    min-height: 48px;     
-    font-size: 14px;
-        }
-QLineEdit#input {
-    min-height: 48px;
-    font-size: 14px;
-        }
-QLineEdit#searchBar:focus {
-    border: 1px solid #0078D4;
+    font-size: 11px;           
+    font-weight: 700;          
+    color: #8fa0a8;            /* High visibility cool slate-gray tags */
+    text-transform: uppercase;
+    letter-spacing: 1.5px;     
+    background: transparent;
 }
-QPushButton#primaryBtn {
-    min-height: 32px;
-    max-height: 32px;
-    font-size: 16px;
-    background-color: #0078D4;
-    color: #FFFFFF;
-    border: none;
-    border-radius: 4px;
-    padding: 4px 16px;
-        }
 
-QPushButton#primaryBtn:hover {
-    background-color: #106EBE;
-        }
+QLineEdit#input {
+    min-height: 40px;          
+    font-size: 14px;           
+}
 
-QPushButton#primaryBtn:pressed {
-    background-color: #005A9E;
-        }
-QPushButton#smallBtn {
-    min-height: 32px;
-    max-height: 32px;
-    font-size: 18px;
-        }
-QLineEdit[error="true"] { border: 2px solid #ff6b6b; }
+/* Deep electric coral warning state */
+QLineEdit[error="true"] { 
+    border: 1px solid #ff6565; 
+    background-color: #2a1619;  
+}
 
-QLabel#errorLabel { color: #ff6b6b; font-size: 12px; }
+QLabel#errorLabel { 
+    color: #ff6565;             /* Emissive electric red-coral text */
+    font-size: 12px;            
+    font-weight: 700;           
+    padding-top: 5px;           
+    letter-spacing: 0.5px;      
+    background: transparent;
+}
 
 /* ============================================================ */
-/*  List Panel                                                   */
+/*  4. Precision Mechanical Interaction Action Buttons           */
 /* ============================================================ */
+QPushButton {
+    font-size: 12px;           
+    font-weight: 700;          
+    border-radius: 6px;
+    min-height: 40px;          
+    padding: 8px 24px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border: 1px solid #24333d;
+    background-color: #141c21;
+    color: #e6edf2;
+}
 
+/* Primary Commit Action: Solid Frosted Vibrant Mint */
+QPushButton#primaryBtn, QPushButton#updateBtn {
+    background-color: #4df0b0; 
+    color: #0d1316;            
+    border: 1px solid #4df0b0;
+    font-weight: 800;
+}
+
+QPushButton#primaryBtn:hover, QPushButton#updateBtn:hover {
+    background-color: #73f7c3; /* Smooth highlight glow lift */
+    border: 1px solid #8bf9ce;
+}
+
+/* Mechanical click indentation simulation */
+QPushButton#primaryBtn:pressed, QPushButton#updateBtn:pressed {
+    background-color: #3ac48f;
+    border: 1px solid #2fa376;
+    padding-top: 10px;        
+    padding-bottom: 6px;
+}
+
+/* Secondary Actions / Dynamic Reset Controls */
+QPushButton#smallBtn, QPushButton[text="Reset"] {
+    background-color: transparent;
+    color: #4df0b0;            
+    border: 1px solid #4df0b0;
+}
+
+QPushButton#smallBtn:hover, QPushButton[text="Reset"]:hover {
+    background-color: #4df0b0;
+    color: #0d1316;
+}
+
+QPushButton#smallBtn:pressed, QPushButton[text="Reset"]:pressed {
+    background-color: #3ac48f;
+    padding-top: 10px;
+    padding-bottom: 6px;
+}
+
+/* Destructive Actions: Burnt Crimson Slate */
 QPushButton#deleteBtn {
-    min-height: 36px;
-    font-size: 16px;
-    background-color: #B0074D;
-    color: #FFFFFF;
-    border: none;
-    border-radius: 4px;
-    padding: 4px 16px;
-        }
-QPushButton#deleteBtn:hover {
-    background-color: #8E053E;
-        }
-QPushButton#deleteBtn:pressed {
-    background-color: #6D032F;
-        }
+    background-color: #e65c5c; 
+    color: #ffffff;
+    border: 1px solid #e65c5c;
+    font-weight: 800;
+}
 
-QTableView {
-    background-color: #2b2b2b;
-    alternate-background-color: #2f2f2f;
-    border: 1px solid #3a3a3a;
-    selection-background-color: #1e4a7a;
-    selection-color: #ffffff;
-        }
+QPushButton#deleteBtn:hover {
+    background-color: #ff7373; 
+    border: 1px solid #ff8c8c;
+}
+
+QPushButton#deleteBtn:pressed {
+    background-color: #c44747;
+    border: 1px solid #a33939;
+    padding-top: 10px;
+    padding-bottom: 6px;
+}
+
+/* ============================================================ */
+/*  5. Elite Matrix Data Ledger Sheets                          */
+/* ============================================================ */
+QTableView, QListWidget {
+    background-color: #141c21;  
+    border: 1px solid #24333d;
+    border-radius: 8px;        
+    gridline-color: #0d1316;
+    selection-background-color: #202b33; 
+    selection-color: #4df0b0;          
+    outline: 0;
+}
+
+QTableView QLabel {
+    color: #556c78;
+    font-weight: 600;
+}
 
 QTableView::item {
-    padding: 8px 12px;
-    min-height: 30px;
-    border: none;
-    outline: 0;
-        }  
+    padding: 12px 16px;
+    border-bottom: 1px solid #0d1316;
+    color: #e6edf2;            
+}  
+
+/* Rhythmic structural alternate striped row tracking */
+QTableView::item:alternate {
+    background-color: #10171c;
+}
+
+QTableView::item:hover {
+    background-color: #1b262d; 
+    color: #ffffff;
+}
 
 QTableView::item:selected {
-    background-color: #1e4a7a;
-    color: #ffffff;
-        }
+    background-color: #202b33;
+    color: #4df0b0;
+    font-weight: 700;
+    border-left: 3px solid #4df0b0; /* Active row left bracket tag anchor */
+}
 
+/* Clean Professional Row Dividers and Crisp Light Headers */
 QHeaderView::section {
-    background-color: #333333;
-    color: #e0e0e0;
-    padding: 8px 12px;
+    background-color: #1c262d;
+    color: #e6edf2;            
+    padding: 10px 16px;
     border: none;
-    border-bottom: 1px solid #4a4a4a;
-    font-weight: bold;
-        }
-
-QLineEdit#searchBar {
-    background-color: #2b2b2b;
-    border: 1px solid #4a4a4a;
-    border-radius: 4px;
-    padding: 6px 12px;
-    min-height: 32px;
-    font-size: 14px;
-    color: #e0e0e0;
+    border-bottom: 2px solid #24333d;
+    font-weight: 700;          
+    font-size: 11px;           
+    text-transform: uppercase;
+    letter-spacing: 1px;       
 }
 
 /* ============================================================ */
-/*  Search_Bar                                                  */
+/*  6. Specialized Structural Navigation                        */
 /* ============================================================ */
+QLineEdit#searchBar {
+    background-color: #141c21;
+    border: 1px solid #24333d; 
+    border-radius: 6px;        
+    padding: 8px 16px;
+    min-height: 40px;          
+    color: #ffffff;            
+    placeholder-text-color: #556c78;
+}
 
 QLineEdit#searchBar:focus {
-    border: 1px solid #0078D4;
-}
-
-QLineEdit#searchBar::placeholder {
-    color: #7a7a7a;
+    border: 2px solid #8fa0a8;  /* Focused layout navigation slate point */
+    background-color: #1a252c;
 }
 
 /* ============================================================ */
-/*  Edit Contact                                               */
+/*  7. CRITICAL: Strict Pop-up Box Form Constraints            */
 /* ============================================================ */
-
-QDialog {
-    background-color: #1e1e1e; /* or whatever your main dark theme bg is */
-}
-
-QPushButton#updateBtn {
-    min-height: 36px;
-    font-size: 16px;
-    background-color: #0078D4;
-    color: #FFFFFF;
-    border: none;
-    border-radius: 4px;
-    padding: 4px 16px;
-}
-QPushButton#updateBtn:hover {
-    background-color: #106EBE;
-}
-QPushButton#updateBtn:pressed {
-    background-color: #005A9E;
-}
-
-/* ============================================================ */
-/*  Status Bar                                                   */
-/* ============================================================ */
-QLabel#counterLabel {
-    font-size: 20px;
-    padding: 6px 12px;
-    }
-
-/* ============================================================ */
-/* MessageBox                                                 */
-/* ============================================================ */
-
 QMessageBox {
-    background-color: #2b2b2b;
+    background-color: #141c21;
+    border: 2px solid #4df0b0;  
+    border-radius: 8px;
 }
+
 QMessageBox QLabel {
-    color: #e0e0e0;
-    min-width: 100px;
+    color: #ffffff;            
+    min-width: 100px;           /* STRICTLY LOCKED TO 100px SPECIFICATION */
+    max-width: 100px;  
+    font-size: 13px;
+    font-weight: 600;
+}
+
+QMessageBox QPushButton {
+    min-width: 75px;
+    min-height: 34px;
+    font-size: 11px;
+    background-color: #1c262d;
+    border-radius: 4px;
+    border: 1px solid #24333d;
+}
+
+QMessageBox QPushButton:hover {
+    border: 1px solid #4df0b0;
+    color: #4df0b0;
+}
+
+/* ============================================================ */
+/*  8. Micro Industrial Scrollbar Tracks                        */
+/* ============================================================ */
+QScrollBar:vertical {
+    border: none;
+    background: #0d1316;
+    width: 6px;
+}
+
+QScrollBar::handle:vertical {
+    background: #24333d;      
+    border-radius: 3px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: #4df0b0;       
+}
+
+QDockWidget::title {
+    background-color: #141c21;
+    padding: 10px 14px;
+    font-weight: 700;
+    color: #8fa0a8;            
+    border-bottom: 1px solid #24333d;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+QLabel#counterLabel, QLabel[text*="Rows:"] {
+    color: #556c78;
+    font-weight: 700;
+}
+
+/* ============================================================ */
+/*  9. Fix: Premium Pop-up Dialog Configurations (Edit Contact) */
+/* ============================================================ */
+QDialog {
+    background-color: #141c21;  /* Deep spruce background matching the main app */
+    border: 1px solid #24333d;   /* Subtle structural border frame */
+}
+
+/* Explicitly targets form fields layout inside the popups to stop the overlap */
+QDialog QLineEdit {
+    background-color: #1a252c;
+    border: 1px solid #24333d;
+    border-radius: 6px;
+    padding: 6px 12px;
+    min-height: 36px;            /* Controlled height for tighter popup layouts */
+    margin-bottom: 8px;          /* STRICT FORCED SEPARATION: stops layout crowding */
+    color: #ffffff;
+}
+
+QDialog QLineEdit:focus {
+    border: 1px solid #4df0b0;   /* Signature mint focus indicator ring */
+    background-color: #202c36;
+}
+
+/* Fixes the low-contrast tiny labels on the left of the popup fields */
+QDialog QLabel {
+    color: #e6edf2;              /* Bright crisp white */
+    font-size: 13px;
+    font-weight: 700;
+    background: transparent;
+}
+
+/* Styles the Save/Cancel interactive pushbuttons inside popups */
+QDialog QPushButton {
+    min-height: 36px;
+    border-radius: 6px;
+    font-weight: 700;
+    text-transform: uppercase;
 }
