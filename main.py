@@ -1,11 +1,22 @@
 import sys
 from pathlib import Path
-
+import os
 from database import Database
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QStandardPaths
 from PySide6.QtGui import QIcon
 from main_window import MainWindow
+
+
+#for pyinstaller
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    # Safely checks for _MEIPASS at runtime, defaults to current directory if not found
+    base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
+    
+    return Path(base_path) / relative_path
+
+
 
 def main():
     app = QApplication(sys.argv)
@@ -15,7 +26,8 @@ def main():
 
     app.setWindowIcon(QIcon("book.ico"))
 
-    app.setStyleSheet(Path("style.qss").read_text())
+    
+    app.setStyleSheet(resource_path("style.qss").read_text())
 
     data_dir = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.AppDataLocation)
     Path(data_dir).mkdir(parents=True, exist_ok=True)
