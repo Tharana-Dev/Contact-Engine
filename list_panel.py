@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QWidget, QLineEdit, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QTableView, QMessageBox, QAbstractItemView, QHeaderView
+from PySide6.QtWidgets import QWidget, QStackedLayout, QLineEdit, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QTableView, QMessageBox, QAbstractItemView, QHeaderView
 from PySide6.QtCore import Signal, Qt, QTimer
 
 
@@ -16,11 +16,13 @@ class ContactListPanel(QWidget):
         self.timer.setInterval(200)
 
         self.model = None
-
+        self.stacked_layout = QStackedLayout()
+        
         # Build UI Components
         self._setup_header()
         self._setup_search_bar()
         self._setup_table()
+        self._setup_empty_state()
         self._setup_buttons()
 
     def _setup_header(self):
@@ -52,8 +54,18 @@ class ContactListPanel(QWidget):
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.table.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
-        self.outer_layout.addWidget(self.table)
+        self.stacked_layout.addWidget(self.table)
+        self.outer_layout.addLayout(self.stacked_layout)
 
+    def _setup_empty_state(self):
+        empty_widget = QWidget()
+        empty_layout = QVBoxLayout(empty_widget)
+        empty_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        empty_label = QLabel("No contacts yet.")
+        empty_label.setObjectName("emptyStateLabel") # so you can style it in QSS
+        empty_layout.addWidget(empty_label)
+        self.stacked_layout.addWidget(empty_widget)
+        
     def _setup_buttons(self):
         button_row = QHBoxLayout()
         self.update_btn = QPushButton("Update")
@@ -85,7 +97,15 @@ class ContactListPanel(QWidget):
     def set_model(self, model) -> None:
         self.model = model
         self.table.setModel(model)
+
         self.table.selectionModel().selectionChanged.connect(self._on_selection_changed)
+        
+        # NOW the model exists. Safe to connect.
+        self.model.rowsInserted.connect(self.update_layout_state)
+        self.model.rowsRemoved.connect(self.update_layout_state)
+        self.model.modelReset.connect(self.update_layout_state)
+        
+        self.update_layout_state()
 
     def _on_selection_changed(self, selected,deselected):
         rows = self.table.selectionModel().selectedRows()
@@ -105,3 +125,13 @@ class ContactListPanel(QWidget):
         if len(rows) == 1:
             row_index = rows[0].row()
             self.edit_requested.emit(row_index)
+
+    def update_layout_state(self, *args):
+        """Switches the active card based on row count."""
+        if self.model.rowCount() == 0:
+            self.stacked_layout.setCurrentIndex(1)
+            self.update_btn.setEnabled(False) # disable button when empty
+            self.delete_btn.setEnabled(False)
+        else:
+            self.stacked_layout.setCurrentIndex(0)
+            self.delete_btn.setEnabled(True)
