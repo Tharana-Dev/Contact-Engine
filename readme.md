@@ -1,3 +1,5 @@
+Here is your complete, updated README.md file content with the v0.7.4 release row seamlessly formatted and integrated into the historic version tracking matrix exactly as specified:
+markdown
 # Contact Engine
 
 A small desktop contact manager built with **PySide6 (Qt for Python)**.
@@ -44,7 +46,7 @@ pip install PySide6
 ## Running
 
 ```bash
-git clone https://github.com/Tharana-Dev/Contact-Engine.git
+git clone https://github.com
 cd Contact-Engine
 python main.py
 ```
@@ -52,7 +54,6 @@ python main.py
 On first run, a local SQLite database (`contacts.db`) is created automatically in the OS-standard application data directory (e.g., `%APPDATA%\TharanaDev\ContactEngine` on Windows, `~/.local/share/TharanaDev/ContactEngine` on Linux). This prevents accidental deletion and ensures data persists across app updates.
 ---
 
-markdown
 ## Project Structure
 ```text
 ├── main.py # entry point: builds app, opens DB, shows window
@@ -217,49 +218,41 @@ write_to_json(path: str) -> None
 write_to_vcard(path: str) -> None
 ```
 
-No Qt. No display. All three open with `encoding="utf-8"` so accented
-characters survive the round trip. CSV uses the `csv` module for escaping;
+Use code with caution.
+No Qt. No display. All three open with encoding="utf-8" so accented
+characters survive the round trip. CSV uses the csv module for escaping;
 JSON streams one element at a time with manual bracket/comma handling; vCard
-writes one `BEGIN:VCARD` / `END:VCARD` block per contact.
+writes one BEGIN:VCARD / END:VCARD block per contact.
 
-### `main_window.py` — the controller
+main_window.py — the controller
 
-Owns the `Database`, the `ContactModel`, both panels, the menu bar, the status
+Owns the Database, the ContactModel, both panels, the menu bar, the status
 bar, the dock, and the export handlers. Its job is to wire everything:
-
-- `InputPanel.contact_added` → `model.add_contact(...)` → update counter → status message.
-- `ContactListPanel.delete_requested` → `model.remove_contacts(rows)` → update counter → status message.
-- Export actions → `QFileDialog.getSaveFileName` → `Exporter` → status message.
-
+• InputPanel.contact_added → model.add_contact(...) → update counter → status message.
+• ContactListPanel.delete_requested → model.remove_contacts(rows) → update counter → status message.
+• Export actions → QFileDialog.getSaveFileName → Exporter → status message.
 No refresh calls. The model emits the right signals and Qt redraws only what
 changed.
 
-### `main.py` — the process
+main.py — the process
 
-Opens the `Database`, passes it to `MainWindow`, wires `db.close` to
-`app.aboutToQuit`. Knows nothing about widgets.
+Opens the Database, passes it to MainWindow, wires db.close to
+app.aboutToQuit. Knows nothing about widgets.
 
----
+Layout
 
-## Layout
-
-The window uses `QMainWindow` slots:
-
-- **Central widget** — the contact table (always visible)
-- **Top dock** — the input form (`QDockWidget` wrapping `InputPanel`)
-- **Menu bar** — File (New Contact, Export → CSV/JSON/vCard, Exit) / View
-  (toggle input form) / Help (About)
-- **Status bar** — permanent row counter on the right, transient feedback
-  messages on the left
-
+The window uses QMainWindow slots:
+• Central widget — the contact table (always visible)
+• Top dock — the input form (QDockWidget wrapping InputPanel)
+• Menu bar — File (New Contact, Export → CSV/JSON/vCard, Exit) / View
+(toggle input form) / Help (About)
+• Status bar — permanent row counter on the right, transient feedback
+messages on the left
 The input dock is user-rearrangeable — drag it to any edge or float it as a
 separate window.
 
----
+Data Flow
 
-## Data Flow
-
-```
 User clicks Add
   → InputPanel validates, emits contact_added(first, last, phone, email)
   → MainWindow._add_contact receives it
@@ -303,96 +296,80 @@ User selects a row and clicks Update
       → FTS5 sync trigger fires automatically
       → dataChanged signal emitted
   → table redraws, status message shows
-```
-
-**Why descending order for deletes?** Deleting row 1 first shifts row 5 down to
+Why descending order for deletes? Deleting row 1 first shifts row 5 down to
 row 4. Iterating in reverse prevents deleting the wrong contact.
 
----
-
-## Persistence
+Persistence
 
 SQLite, not JSON.
-
-- **On startup:** `main.py` uses `QStandardPaths` to locate the OS-specific app data directory, then opens `contacts.db` there. `Database.__init__` enables WAL mode, applies `synchronous=NORMAL`, and creates the table and indexes if missing. Idempotent — safe to run every launch.
-- **On every mutation:** `ContactModel` calls `Database.insert_contact` or
-  `Database.delete_contacts`, each wrapped in a transaction. The data hits disk
-  immediately. A crash loses nothing.
-- **On quit:** `db.close()` on `aboutToQuit` releases the connection cleanly.
-
+• On startup: main.py uses QStandardPaths to locate the OS-specific app data directory, then opens contacts.db there. Database.__init__ enables WAL mode, applies synchronous=NORMAL, and creates the table and indexes if missing. Idempotent — safe to run every launch.
+• On every mutation: ContactModel calls Database.insert_contact or
+Database.delete_contacts, each wrapped in a transaction. The data hits disk
+immediately. A crash loses nothing.
+• On quit: db.close() on aboutToQuit releases the connection cleanly.
 The main schema:
-
 ```sql
 CREATE TABLE Contacts (
-    id          INTEGER PRIMARY KEY,
-    first_name  TEXT,
-    last_name   TEXT,
-    phone       TEXT,
-    email       TEXT
+id          INTEGER PRIMARY KEY,
+first_name  TEXT,
+last_name   TEXT,
+phone       TEXT,
+email       TEXT
 );
-
 CREATE INDEX idx_contacts_first_name ON Contacts(first_name);
 CREATE INDEX idx_contacts_last_name  ON Contacts(last_name);
 CREATE INDEX idx_contacts_email      ON Contacts(email);
 ```
-
-A parallel FTS5 virtual table (`contacts_fts`) indexes `first_name`,
-`last_name`, and `email` in external-content mode, kept in sync by three
-triggers. `search()` queries it with `MATCH`.
-
+A parallel FTS5 virtual table (contacts_fts) indexes first_name,
+last_name, and email in external-content mode, kept in sync by three
+triggers. search() queries it with MATCH.
 WAL mode enables concurrent reads while a write is in progress — relevant once
 background sync lands in a later version.
 
----
+Keyboard Shortcuts
 
-## Keyboard Shortcuts
 
-| Shortcut | Action |
-|---|---|
-| `Ctrl+N` | Show the input dock and focus the first field |
-| `Ctrl+Q` | Quit |
+Shortcut	Action
+Ctrl+N	Show the input dock and focus the first field
+Ctrl+Q	Quit
 
----
 
-## Extending
+Extending
 
-The architecture is designed so features can be **added**, not **restructured**:
+The architecture is designed so features can be added, not restructured:
+• Click a row to edit — read selectionModel().selectedRows() in the
+panel, emit an edit_requested(Contact), populate the form.
+• Confirm before delete — wrap the delete handler in a QMessageBox.question.
+• Import from CSV / vCard — a QFileDialog.getOpenFileName, a parser that
+yields Contact objects, then model.add_contact in a loop.
+• Sort by column — implement sort() on the model, or wrap it in a
+QSortFilterProxyModel.
+• Streamed export for large datasets — replace the JSON writer's
+build-then-write with a generator pipeline.
 
-- **Click a row to edit** — read `selectionModel().selectedRows()` in the
-  panel, emit an `edit_requested(Contact)`, populate the form.
-- **Confirm before delete** — wrap the delete handler in a `QMessageBox.question`.
-- **Import from CSV / vCard** — a `QFileDialog.getOpenFileName`, a parser that
-  yields `Contact` objects, then `model.add_contact` in a loop.
-- **Sort by column** — implement `sort()` on the model, or wrap it in a
-  `QSortFilterProxyModel`.
-- **Streamed export for large datasets** — replace the JSON writer's
-  build-then-write with a generator pipeline.
+Versions
 
----
 
-## Versions
+Tag	Highlights
+v0.1	Initial release — tabs layout, save on close, JSON persistence
+v0.2	Dock-based layout, menu bar, status bar, save on mutation
+v0.3	Code structure cleanup and color palette
+v0.4	SQLite persistence, QAbstractTableModel, QTableView, WAL mode
+v0.4.1	Table styling pass, form layout fixes
+v0.5	FTS5-backed search with debounce, live filtering
+v0.5.1	Input validation — regex validators, inline error feedback
+v0.5.2	Cleanup pass — no new features, code and QSS tidy
+v0.6	Export engine — CSV, JSON, and vCard with file dialog
+v0.6.1	Refactor — unified export handlers
+v0.7	Edit existing contacts via dialog, shared validation module
+v0.7.1	Database moved to OS-standard AppData directory
+v0.7.2	Window layout persistence, visual empty state
+v0.7.3	UI Polish: custom app icon, fixed-size message boxes, dark theme dialogs.
+v0.7.4	UI Polish: integrated premium Spruce & Mint sub-theme, resolved QDialog field overlapping, updated README screenshots.
 
-| Tag | Highlights |
-|---|---|
-| `v0.1` | Initial release — tabs layout, save on close, JSON persistence |
-| `v0.2` | Dock-based layout, menu bar, status bar, save on mutation |
-| `v0.3` | Code structure cleanup and color palette |
-| `v0.4` | SQLite persistence, `QAbstractTableModel`, `QTableView`, WAL mode |
-| `v0.4.1` | Table styling pass, form layout fixes |
-| `v0.5` | FTS5-backed search with debounce, live filtering |
-| `v0.5.1` | Input validation — regex validators, inline error feedback |
-| `v0.5.2` | Cleanup pass — no new features, code and QSS tidy |
-| `v0.6` | Export engine — CSV, JSON, and vCard with file dialog |
-| `v0.6.1` | Refactor — unified export handlers |
-| `v0.7` | Edit existing contacts via dialog, shared validation module |
-| `v0.7.1` | Database moved to OS-standard AppData directory |
-| `v0.7.2` | Window layout persistence, visual empty state |
-| `v0.7.3` | UI Polish: custom app icon, fixed-size message boxes, dark theme dialogs. |
-| v0.7.4 | UI Polish: integrated premium Spruce & Mint sub-theme, resolved QDialog field overlapping, updated README screenshots. |
----
 
-## Known Limitations
+Known Limitations
 
-- No column sorting yet (planned for Phase 2)
-- Single database file for all contacts (no multi-address-book support)
-- Export loads the full contact list into memory (fine for desktop scale; streaming needed for 500k+ rows)
+• No column sorting yet (planned for Phase 2)
+• Single database file for all contacts (no multi-address-book support)
+• Export loads the full contact list into memory (fine for desktop scale; streaming needed for 500k+ rows)
