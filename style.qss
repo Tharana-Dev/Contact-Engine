@@ -151,3 +151,15 @@ QLabel#counterLabel {
     font-size: 20px;
     padding: 6px 12px;
     }
+
+/* ============================================================ */
+/* MessageBox                                                 */
+/* ============================================================ */
+
+QMessageBox {
+    background-color: #2b2b2b;
+}
+QMessageBox QLabel {
+    color: #e0e0e0;
+    min-width: 100px;
+}
