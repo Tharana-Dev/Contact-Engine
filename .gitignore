@@ -25,3 +25,13 @@ contacts.db
 *.csv
 *.vcf
 *.json
+
+book.ico
+
+# PyInstaller
+build/
+dist/
+*.spec
+
+# Exported data
+export_data.*
