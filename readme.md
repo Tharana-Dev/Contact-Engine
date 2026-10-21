@@ -55,6 +55,15 @@ On first run, a local SQLite database (`contacts.db`) is created automatically i
 
 ## Project Structure
 ```text
+├── tests/
+│   ├── test_database.py
+│   ├── test_exporter.py
+│   ├── test_input_panel.py
+│   ├── test_list_panel.py
+│   ├── test_mainwindow.py
+│   ├── test_table_model.py
+│   ├── test_update_dialog.py
+│   └── test_validation.py
 ├── main.py # entry point: builds app, opens DB, shows window
 ├── main_window.py # QMainWindow: owns model, panels, menus, docks, status
 ├── input_panel.py # form for entering a new contact
@@ -372,6 +381,24 @@ The architecture is designed so features can be **added**, not **restructured**:
 | `v0.7.2` | Window layout persistence, visual empty state |
 | `v0.7.3` | UI Polish: custom app icon, fixed-size message boxes, dark theme dialogs. |
 | `v0.7.4` | UI Polish: integrated premium Spruce & Mint sub-theme, resolved QDialog field overlapping, updated README screenshots. |
+| `v0.8` | Comprehensive test suite (64 tests) covering UI, DB, and E2E |
+
+---
+
+## Testing
+
+The project uses `pytest` and `pytest-qt` to ensure stability across the UI, database, and controller layers.
+
+```bash
+# Run the full suite
+pytest -v
+```
+
+**What is tested:**
+- **Database Layer:** CRUD operations, FTS5 search, trigger-based sync.
+- **Table Model:** Signal emissions (`dataChanged`, `rowsInserted`), data roles, and index bounds.
+- **UI Components:** Field validation, debounce timers, empty state switching, and selection logic.
+- **Main Window (E2E):** Mocked file dialogs, mocked message boxes, window layout persistence (QSettings), and modal dialog interactions (using `QTimer.singleShot`).
 
 ---
 
