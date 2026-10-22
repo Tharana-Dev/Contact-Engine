@@ -1,11 +1,16 @@
 # Contact Engine
 
 A small desktop contact manager built with **PySide6 (Qt for Python)**.
-Add contacts through a form, view them in a table, delete them — and
+Add contacts through a form, view them in a sortable table, delete them — and
 everything persists to a local SQLite database between sessions.
 
-![Main window](screenshots/Screenshot1.png)
+![Main window](screenshots/main_new.png)
 
+### 🎥 Architecture Trailer
+
+https://github.com/user-attachments/assets/a724b262-c8d8-419c-812c-860f3f4b4984
+
+---
 
 ---
 
