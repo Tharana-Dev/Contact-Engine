@@ -8,13 +8,10 @@ everything persists to a local SQLite database between sessions.
 
 ### 🎥 Architecture Trailer
 
-<video src="https://github.com/user-attachments/assets/a724b262-c8d8-419c-812c-860f3f4b4984" controls="controls" style="max-width: 100%;">
+<video src="https://github.com/user-attachments/assets/fba2f2da-5d60-4c08-bb20-64d8df56c1c2" controls="controls" style="max-width: 100%;">
 </video>
 
 ---
-
----
-
 ## Features
 
 - Add contacts (first name, last name, phone, email)
