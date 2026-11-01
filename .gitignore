@@ -35,3 +35,6 @@ dist/
 
 # Exported data
 export_data.*
+
+#commit_history
+commit_history.txt
