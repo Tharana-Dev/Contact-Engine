@@ -1,6 +1,7 @@
 import sqlite3
 from contact import Contact
 from dataclasses import replace
+import re
 
 
 class Database:
@@ -181,7 +182,7 @@ class Database:
         if not self._is_connected():
             return []
 
-        safe = "".join(ch for ch in query if ch.isalnum() or ch.isspace())
+        safe = re.sub(r'[^\w\s]', ' ', query)
         terms = safe.split()
         if not terms:
             return self.fetch_all()

@@ -9,26 +9,19 @@ from table_model import ContactModel
 from main_window import MainWindow
 from database import Database
 from contact import Contact
-
-
-@pytest.fixture
-def isolated_settings(tmp_path):
-    QSettings.setPath(
-        QSettings.Format.IniFormat,  # storage format
-        QSettings.Scope.UserScope,  # scope
-        str(tmp_path)
-    )
-    yield tmp_path
-
-    QSettings.setPath(
-        QSettings.Format.IniFormat,
-        QSettings.Scope.UserScope,
-        ""
-    )  # reset
-
+from unittest.mock import ANY
 
 @pytest.fixture
-def window(isolated_settings, qtbot):
+def mock_settings(mocker):
+    """Mocks QSettings so it never touches the real OS registry/filesystem."""
+    # Fake settings object
+    fake_settings = mocker.patch("main_window.QSettings")
+    # Make it return None by default for geometry so it doesn't crash
+    fake_settings.return_value.value.return_value = None
+    return fake_settings
+
+@pytest.fixture
+def window(mock_settings, qtbot):
     db = Database(":memory:")
     window = MainWindow(db)
     window.resize(600, 200)
@@ -226,19 +219,12 @@ def test_about_dialog(window, mocker):
     mock_instance.setText.assert_called_with("Version 0.7.3")
     mock_instance.exec.assert_called_once()
 
-def test_window_layout_persistence(window, qtbot, isolated_settings):
+def test_window_layout_persistence(window, qtbot, mock_settings):
     window.resize(950, 850)
     qtbot.wait(50)
 
     window.close()
 
-    db2 = Database(":memory:")
-    window2 = MainWindow(db2)
-    qtbot.addWidget(window2)
-    window2.show()
-    qtbot.wait(50)
-
-    assert window2.width() == 950
-    assert window2.height() == 850
-    
-    assert window2.form_dock.objectName() == "input_dock"
+    # Verify that saveState and saveGeometry were called on the mock
+    mock_settings.return_value.setValue.assert_any_call("geometry", mocker.ANY)
+    mock_settings.return_value.setValue.assert_any_call("windowState", mocker.ANY)

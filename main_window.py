@@ -77,7 +77,7 @@ class MainWindow(QMainWindow):
             "Export the contacts as a .json file.")
 
         self.export_vcard_action = QAction("vCard", self)
-        self.export_vcard_action.triggered.connect(lambda: self._export_as("vCard"))
+        self.export_vcard_action.triggered.connect(lambda: self._export_as("vcard"))
         self.export_vcard_action.setStatusTip(
             "Export the contacts as a .vcf file.")
 
@@ -126,7 +126,7 @@ class MainWindow(QMainWindow):
         msg = QMessageBox(self)
         msg.setIcon(QMessageBox.Icon.Information)
         msg.setWindowTitle("Contact Engine")
-        msg.setText("Version 0.7.3") 
+        msg.setText("Version 1.0.1") 
         msg.exec()
 
     def _on_create_new_triggered(self):

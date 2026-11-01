@@ -26,7 +26,7 @@ contacts.db
 *.vcf
 *.json
 
-book.ico
+
 
 # PyInstaller
 build/

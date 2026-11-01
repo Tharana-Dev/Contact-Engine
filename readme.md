@@ -1,7 +1,7 @@
 # Contact Engine
 
 A small desktop contact manager built with **PySide6 (Qt for Python)**.
-Add contacts through a form, view them in a sortable table, delete them — and
+Add contacts through a form, view them in a table, delete them — and
 everything persists to a local SQLite database between sessions.
 
 ![Main window](screenshots/Screenshot1.png)
@@ -48,7 +48,7 @@ pip install PySide6
 ## Running
 
 ```bash
-git clone https://github.com
+git clone https://github.com/Tharana-Dev/Contact-Engine.git
 cd Contact-Engine
 python main.py
 ```
@@ -71,7 +71,6 @@ On first run, a local SQLite database (`contacts.db`) is created automatically i
 ├── main_window.py # QMainWindow: owns model, panels, menus, docks, status
 ├── input_panel.py # form for entering a new contact
 ├── contact_dialog.py # QDialog for editing an existing contact
-├── validation.py # shared regex patterns and format checkers
 ├── list_panel.py # QTableView + search box + Update/Delete buttons
 ├── table_model.py # ContactModel — QAbstractTableModel subclass
 ├── database.py # SQLite connection, schema, FTS5, all SQL
@@ -385,6 +384,8 @@ The architecture is designed so features can be **added**, not **restructured**:
 | `v0.7.3` | UI Polish: custom app icon, fixed-size message boxes, dark theme dialogs. |
 | `v0.7.4` | UI Polish: integrated premium Spruce & Mint sub-theme, resolved QDialog field overlapping, updated README screenshots. |
 | `v0.8` | Comprehensive test suite (64 tests) covering UI, DB, and E2E |
+| `v1.0.0` | Phase 1 Complete — Packaging, Release, and Architecture Trailer |
+| `v1.0.1` | Requirements.txt, fixed vCard export case-sensitivity, CSV injection prevention, and Registry isolation in tests |
 
 ---
 
