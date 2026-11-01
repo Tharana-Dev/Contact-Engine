@@ -88,6 +88,7 @@ class MainWindow(QMainWindow):
 
     def _build_dock(self):
         self.form_dock = QDockWidget("Add Contact", self)
+        self.form_dock.setObjectName("input_dock")
         self.form_dock.setWidget(self.input_panel)
         self.addDockWidget(Qt.DockWidgetArea.TopDockWidgetArea, self.form_dock)
 

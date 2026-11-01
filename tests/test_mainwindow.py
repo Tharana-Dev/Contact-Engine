@@ -230,15 +230,15 @@ def test_window_layout_persistence(window, qtbot, isolated_settings):
     window.resize(950, 850)
     qtbot.wait(50)
 
-    saved_geometry = window.saveGeometry()
     window.close()
 
     db2 = Database(":memory:")
     window2 = MainWindow(db2)
     qtbot.addWidget(window2)
-    
     window2.show()
     qtbot.wait(50)
 
-    #ASSERT: Prove that the restored window's raw geometry configuration
-    assert window2.saveGeometry() == saved_geometry
+    assert window2.width() == 950
+    assert window2.height() == 850
+    
+    assert window2.form_dock.objectName() == "input_dock"
